@@ -8,6 +8,8 @@ import java.nio.file.Paths;
 import java.text.ParseException;
 import java.util.*;
 
+import static pipeline.ResultFileWriter.OUTPUT_FOLDER_NAME;
+
 
 /**
  * runs cs-detector.jar
@@ -44,32 +46,41 @@ public class SmellDetector
         //System.out.println(pathRelative);
         //System.out.println(pathRelative.toString().replaceFirst("\\.java$", "").replace(File.separatorChar, '.'));
 
-        runSmellDetector(path, PATH_TO_RESULT_FILE);
+        //runSmellDetector(path, PATH_TO_RESULT_FILE);
 
         readSmellsFromFileToHashmap(PATH_TO_RESULT_FILE);
     }
 
-    static void runSmellDetector(String path, String PATH_TO_RESULT_FILE) throws IOException
+    static void runSmellDetector(String pathToRepository, String PATH_TO_RESULT_FILE) throws IOException
     {
         String operatingSystem = System.getProperty("os.name");
+
+        String linesFromConsoleRunningSmellDetector = OUTPUT_FOLDER_NAME + "linesFromConsoleRunningSmellDetector.txt";
 
         //call cs-detector
         if (operatingSystem.contains("Mac"))
         {
             //for Mac
-            Git.executeCommandsAndReadLinesFromConsole("/bin/bash", "-c", "java -jar cs-detector.jar " + path + " " + PATH_TO_RESULT_FILE);
+
+            Git.executeCommandsAndReadLinesFromConsole(linesFromConsoleRunningSmellDetector, "/bin/bash", "-c", "pmd-bin-5.8.1/bin/run.sh pmd -d " + pathToRepository + " -f csv -R java-design |grep 'God' >" + PATH_TO_RESULT_FILE );
+            Git.executeCommandsAndReadLinesFromConsole(linesFromConsoleRunningSmellDetector, "/bin/bash", "-c", "pmd-bin-5.8.1/bin/run.sh pmd -d " + pathToRepository + " -f csv -R java-coupling |grep 'CouplingBetweenObjects' >>" + PATH_TO_RESULT_FILE );
+            Git.executeCommandsAndReadLinesFromConsole(linesFromConsoleRunningSmellDetector, "/bin/bash", "-c", "pmd-bin-5.8.1/bin/run.sh pmd -d " + pathToRepository + " -f csv -R java-codesize |grep 'NPathComplexity' >>" + PATH_TO_RESULT_FILE );
+
+
+
+           // Git.executeCommandsAndReadLinesFromConsole(linesFromConsoleRunningSmellDetector,"/bin/bash", "-c", "java -jar cs-detector.jar " + pathToRepository + " " + PATH_TO_RESULT_FILE);
             System.out.println(" Smells were written to file: " + PATH_TO_RESULT_FILE);
         }
-        else if (operatingSystem.contains("Windows"))
-        {
-            //for Windows
-            Git.executeCommandsAndReadLinesFromConsole("cmd /c java -jar cs-detector.jar " + path + " " + PATH_TO_RESULT_FILE);
-
-        }
+//        else if (operatingSystem.contains("Windows"))
+//        {
+//            //for Windows
+//            Git.executeCommandsAndReadLinesFromConsole(linesFromConsoleRunningSmellDetector,"cmd /c java -jar cs-detector.jar " + pathToRepository + " " + PATH_TO_RESULT_FILE);
+//
+//        }
         else
         {
             ResultFileWriter.log();
-            System.err.println("The program works only on Mac and Windows OS's");
+            System.err.println("The program works only on Mac");
             System.exit(1);
         }
 

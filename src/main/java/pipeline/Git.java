@@ -7,59 +7,77 @@ import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import static pipeline.ResultFileWriter.OUTPUT_FOLDER_NAME;
+import static pipeline.ResultFileWriter.removeFileIfPresent;
+
 final class Git
 {
 
-    final static File PATH_TO_REPOSITORY = new File("output/cloned_repository");
+   private static File createPathToRepository(String clonedRepoFolderName)
+   {
+
+       return new File( OUTPUT_FOLDER_NAME + clonedRepoFolderName);
+   }
 
 
-    static void clone_repository(String repository) throws IOException, InterruptedException
+    static String clone_repository(String repositoryURL, String clonedRepoFolderName) throws IOException, InterruptedException
     {
-        Process process = Runtime.getRuntime().exec("git clone " + repository + " " + PATH_TO_REPOSITORY);
+        File PATH_TO_REPOSITORY = createPathToRepository(clonedRepoFolderName);
 
+        Process process = Runtime.getRuntime().exec("git clone " + repositoryURL + " " + PATH_TO_REPOSITORY);
+
+        System.err.println("Cloning repository: " + repositoryURL + " into folder " + PATH_TO_REPOSITORY);
         int returned = process.waitFor();
 
         if (returned == 0 && PATH_TO_REPOSITORY.isDirectory())
-            System.err.println("Repository " + repository + " copied successfully");
+            System.err.println("Repository " + repositoryURL + " copied successfully");
         else if (PATH_TO_REPOSITORY.isDirectory())
-            System.err.println("Repository " + repository + " was not copied, because it already exist.");
+            System.err.println("Repository " + repositoryURL + " was not copied, because it already exist.");
         else
         {
             ResultFileWriter.log();
-            System.err.println("ERROR. Repository " + repository + " was not copied. " + "returned value: " + returned);
+            System.err.println("ERROR. Repository " + repositoryURL + " was not copied for unknown reason. " + "returned value: " + returned);
             System.exit(2);
         }
+        return PATH_TO_REPOSITORY.toString();
     }
 
 
-     static void retrieveCommits() throws IOException
+
+
+     static List<String> retrieveCommitsForRepoAndSaveResultsToFile(String inputPathToRepository, String outputPathToRepoHistoryFile) throws IOException
     {
+        removeFileIfPresent(outputPathToRepoHistoryFile);
+
         String operatingSystem = System.getProperty("os.name");
 
+        List<String> linesFromConsole = null;
         if (operatingSystem.contains("Mac"))
         {
             //for Mac
-            executeCommandsAndReadLinesFromConsole("/bin/bash", "-c", "cd " + PATH_TO_REPOSITORY + " && git log --reverse --pretty=format:'%h =%ad='");
+            linesFromConsole = executeCommandsAndReadLinesFromConsole(outputPathToRepoHistoryFile, "/bin/bash", "-c", "cd " + inputPathToRepository + " && git log --reverse --pretty=format:'%H =%ad='");
         }
         else if (operatingSystem.contains("Windows"))
         {
             //for Windows
-            executeCommandsAndReadLinesFromConsole("cmd /c cd " + PATH_TO_REPOSITORY + " && git log --reverse --pretty=format:\"%h =%ad=\" ");
+            linesFromConsole = executeCommandsAndReadLinesFromConsole(outputPathToRepoHistoryFile, "cmd /c cd " + inputPathToRepository + " && git log --reverse --pretty=format:\"%H =%ad=\" ");
         }
         else
         {
             ResultFileWriter.log();
-            System.err.println("The program works only on Mac and Windows OS's");
+            System.err.println("This program works only on Mac and Windows OS's");
             System.exit(1);
         }
+        return linesFromConsole;
     }
 
 
 
 
-     static void executeCommandsAndReadLinesFromConsole(String... command) throws IOException
+     static List<String> executeCommandsAndReadLinesFromConsole(String outputPathToFile, String... command) throws IOException
     {
 
+        System.out.println("Received command: " + Arrays.toString(command) + " Lines from console will be saved to " + outputPathToFile);
         Process process = Runtime.getRuntime().exec(command);
 
         BufferedReader stdInput = new BufferedReader(new
@@ -68,22 +86,24 @@ final class Git
         BufferedReader stdError = new BufferedReader(new
                 InputStreamReader(process.getErrorStream()));
 
-        readCommandOutputAndWriteResultToFileAndArraList(stdInput, ResultFileWriter.ALL_HISTORY_FILE_NAME);
-        readCommandOutputAndWriteResultToFileAndArraList(stdError, ResultFileWriter.ALL_HISTORY_FILE_NAME);
+        List<String> linesFromConsole = readCommandOutputAndWriteResultToFileAndReturnLinesFromConsole(stdInput, outputPathToFile);
+        linesFromConsole.addAll(readCommandOutputAndWriteResultToFileAndReturnLinesFromConsole(stdError, outputPathToFile));
 
+        return linesFromConsole;
     }
 
 
-    private static void readCommandOutputAndWriteResultToFileAndArraList(BufferedReader stdInput, String outputFilePath) throws IOException
+    private static List<String> readCommandOutputAndWriteResultToFileAndReturnLinesFromConsole(BufferedReader stdInput, String outputFilePath) throws IOException
     {
+        List<String> linesFromConsole = new ArrayList<>();
         // read the output from the command
         String command_output;
         while ((command_output = stdInput.readLine()) != null)
         {
             ResultFileWriter.writeLineToFile(command_output, outputFilePath);
-            IntervalSplitter.linesFromConsole.add(command_output);
+            linesFromConsole.add(command_output);
         }
-
+        return linesFromConsole;
     }
 
 

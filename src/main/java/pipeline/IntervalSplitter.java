@@ -1,78 +1,52 @@
 package pipeline;
 
-import org.apache.commons.io.FileUtils;
-import org.eclipse.jdt.internal.core.SourceType;
-
 import java.io.*;
 import java.text.ParseException;
 import java.util.*;
 
-import static pipeline.Git.readDateFromLine;
 import static pipeline.ResultFileWriter.log;
+import static pipeline.ResultFileWriter.removeFileIfPresent;
 import static pipeline.ResultFileWriter.writeLineToFile;
 import static pipeline.SlopeCalculation.getSlopeForFileMetric;
-import static sun.tools.jstat.Alignment.keySet;
 
 
 class IntervalSplitter
 {
-    static List<List<String>> groups;
     static ArrayList<String> commits = new ArrayList<>();
 
-    static List<String> linesFromConsole = new ArrayList<>();
 
-    static List<List<String>> getCommitsAtIntervalsFromArrayList(int days) throws IOException, ParseException {
+    static ArrayList<String> getAllCommitIdsFromConsoleLines(List<String> linesFromConsole) throws IOException, ParseException {
 
-        List<List<String>> result = new ArrayList<>();
-        List<String> group = Collections.emptyList();
-
-        Calendar endDate = readDateFromLine(linesFromConsole.get(0));
-
+        ArrayList<String> commitIds = new ArrayList<>();
         for (String line : linesFromConsole)
         {
-            Calendar currentDate = readDateFromLine(line);
-            //create new interval when currentDate is after or equal endDate
-            while (currentDate.after(endDate) || currentDate.equals(endDate)) {
-                endDate = Git.getCommitDateAfterNDays(endDate, days);
-                group = new ArrayList<>();
-                result.add(group);
-            }
-
-            String commit = line.substring(0, 7);
-            commits.add(commit);
-
-            group.add(commit);
+            String commit = line.substring(0, 40);
+            commitIds.add(commit);
         }
 
-        if (result.isEmpty()) {
+        if (commitIds.isEmpty()) {
             log();
-            System.err.print("Result is empty");
+            System.err.print("No commits");
             System.exit(5);
         }
 
-        return removeEmptyGroups(result);
+        return commitIds;
     }
 
 
-     static void printCommitsInIntervals() throws IOException, ParseException
+     static void saveCommitIdsToFile(ArrayList<String> commitIds, String outputFilePath) throws IOException, ParseException
     {
+        removeFileIfPresent(outputFilePath);
+
         System.out.println();
 
-        for (int i = 0; i < groups.size(); i++)
-        {
-            List<String> group = groups.get(i);
-            System.out.print("GROUP " + i + ": ");
-            writeLineToFile("GROUP " + i + ": ",ResultFileWriter.RESULT_FILE_NAME);
-
-            for (String commit : group)
+            for (String commit : commitIds)
             {
                 System.out.print(commit);
                 System.out.print(' ');
-                writeLineToFile(commit + " ", ResultFileWriter.RESULT_FILE_NAME);
+                writeLineToFile(commit, outputFilePath);
             }
-            System.out.println();
-            writeLineToFile("\n",ResultFileWriter.RESULT_FILE_NAME);
-        }
+        System.out.println();
     }
 
 

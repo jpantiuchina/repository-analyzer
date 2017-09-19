@@ -1,80 +1,85 @@
 package pipeline;
 
-import com.github.mauricioaniche.ck.Runner;
 import java.io.IOException;
-import java.lang.reflect.Array;
 import java.text.ParseException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 
-import static pipeline.IntervalSplitter.*;
 import static pipeline.ResultFileWriter.log;
+import static pipeline.ResultFileWriter.OUTPUT_FOLDER_NAME;
 import static pipeline.SmellDetector.readSmellsFromFileToHashmap;
 
-/**
- *  Input: 2 arguments:
- *  1) the address of a git repository hosted on GitHub
- *  2) time interval expressed in days
- *
- *  https://github.com/jpantiuchina/robot 5
- *  https://github.com/square/okhttp 500
- */
 public class WholePipeline
 {
     //public static HashMap<String,String> smellTypes = new HashMap();
+
 
     public static void main(String[] args) throws IOException, InterruptedException, ParseException
     {
         if(args==null || args.length != 2)
         {
             log();
-            System.out.println("Usage arguments: <repository url> <time interval in days>");
+            System.out.println("Usage arguments: <repository url>");
             System.exit(1);
         }
 
-        String repository = args[0];
-        int interval = Integer.parseInt(args[1]);
+        String repositoryURL = args[0];
+        String clonedRepoFolderName = (args[1]);
 
-        System.out.println("Repository: " + repository + " ; Interval of days: " + interval);
+        String PATH_TO_REPOSITORY = Git.clone_repository(repositoryURL, clonedRepoFolderName);
 
-        Git.clone_repository(repository);
-        Git.retrieveCommits(); //runs git log in reverse order & saves whole history in output/all_commits.txt
+        String REPOSITORY_HISTORY_FILE_PATH = OUTPUT_FOLDER_NAME + "linesFromConsole.txt";
+        List<String> linesFromConsole = Git.retrieveCommitsForRepoAndSaveResultsToFile(PATH_TO_REPOSITORY, REPOSITORY_HISTORY_FILE_PATH); //runs git log in reverse order & saves whole history in output/all_commits.txt
 
-        IntervalSplitter.groups = IntervalSplitter.getCommitsAtIntervalsFromArrayList(interval);
+        ArrayList<String> commitIds = IntervalSplitter.getAllCommitIdsFromConsoleLines(linesFromConsole);
 
-        IntervalSplitter.printCommitsInIntervals(); // prints to console & saves grouped commits to result.txt
+        String COMMIT_IDS_FILE_PATH = OUTPUT_FOLDER_NAME + "sorted_commit_Ids.txt";
 
-        createOutputFileforEachCommit();
-        createEmptyFinalResultFile();
+        IntervalSplitter.saveCommitIdsToFile(commitIds, COMMIT_IDS_FILE_PATH); // prints to console & saves grouped commits to result.txt
 
-        handleGroups(groups);
+
+
+        createOutputFileForEachCommit(PATH_TO_REPOSITORY, commitIds);
+        System.out.println("GOOD");
+        System.exit(10);
+        //createEmptyFinalResultFile();
+
+        //handleGroups(groups);
 
     }
 
-
-    public static void createOutputFileforEachCommit() throws IOException
+    //TODO-- doing here
+    private static void createOutputFileForEachCommit(String PATH_TO_REPOSITORY, ArrayList<String> commitIds) throws IOException
     {
-        for (int i = 0; i < IntervalSplitter.groups.size(); i++)
+
+        String linesFromConsoleCheckoutCommits = OUTPUT_FOLDER_NAME + "linesFromConsoleCheckoutCommits.txt";
+
+        for (String commit : commitIds)
+//        String commit;
+//        for (int i = 0; i < 5; i++)
+
         {
-            List<String> group = IntervalSplitter.groups.get(i);
+             System.out.print(commit);
+            //commit = commitIds.get(i);
 
-            for (String commit : group)
-            {
-                System.out.print(commit);
                 //checkout each commit of the whole repository
-                Git.executeCommandsAndReadLinesFromConsole("/bin/bash", "-c", "cd " + Git.PATH_TO_REPOSITORY + " && git checkout " + commit);
-                String commitFileName = "output/".concat(commit).concat(".csv");
-                //run smell detector
-                String commitSmells = "output/".concat(commit).concat("-smells.csv");
-                SmellDetector.runSmellDetector("output/cloned_repository",commitSmells);
-                //add smells to hashmap
-                HashMap <String, ArrayList<String>> files = readSmellsFromFileToHashmap(commitSmells);
+                Git.executeCommandsAndReadLinesFromConsole(linesFromConsoleCheckoutCommits,"/bin/bash", "-c", "cd " + PATH_TO_REPOSITORY + " && git checkout " + commit);
+                String commitFileName = OUTPUT_FOLDER_NAME.concat(commit).concat(".csv");
 
-                Runner.computeQualityMetrics("output/cloned_repository", commitFileName, files);
+                //run smell detector
+                String pathToFileWithCommitSmells = OUTPUT_FOLDER_NAME.concat(commit).concat("-smells.csv");
+                SmellDetector.runSmellDetector(PATH_TO_REPOSITORY,pathToFileWithCommitSmells);
+
+
+
+                //add smells to hashmap TODO
+                //HashMap<String, ArrayList<String>> files = readSmellsFromFileToHashmap(pathToFileWithCommitSmells);
+
+                //Runner.computeQualityMetrics("output/cloned_repository", commitFileName, files);
             }
             System.out.println();
-        }
+
 
 
 

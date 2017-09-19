@@ -8,9 +8,11 @@ import java.io.IOException;
 
 class ResultFileWriter
 {
+    final static String OUTPUT_FOLDER_NAME = "output/";
+
     private final static String TAG = Git.class.getCanonicalName();
-    final static String ALL_HISTORY_FILE_NAME = "output/all_commits.txt";
-    final static String RESULT_FILE_NAME = "output/result.txt";
+    //final static String ALL_HISTORY_FILE_NAME = PATH_TO_REPOSITORY + "/all_commits.txt";
+    //final static String RESULT_FILE_NAME = PATH_TO_REPOSITORY + "/result.txt";
 
     static void writeLineToFile(String lineToAdd, String pathToFile) throws IOException
     {
@@ -34,5 +36,21 @@ class ResultFileWriter
     static void log()
     {   //[2] -gets the previous method, hence, the one from which log() i called
         System.err.println("LOG: " + TAG + "." + Thread.currentThread().getStackTrace()[2].getMethodName());
+    }
+
+    static void removeFileIfPresent(String fileName) throws IOException {
+        File file = new File(fileName);
+        if (file.exists())
+        {
+            if(file.delete())
+            {
+                System.err.println("old " + fileName + " was deleted");
+            }
+            else
+            {
+                System.err.println("Error removing old file " + fileName);
+                System.exit(5);
+            }
+        }
     }
 }
