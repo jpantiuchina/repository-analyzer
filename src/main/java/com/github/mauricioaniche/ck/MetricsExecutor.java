@@ -27,24 +27,27 @@ public class MetricsExecutor extends FileASTRequestor {
 	@Override
 	public void acceptAST(String sourceFilePath, 
 			CompilationUnit cu) {
-		
+
+
 		CKNumber result = null;
-		
+
 		try {
 			ClassInfo info = new ClassInfo();
 			cu.accept(info);
 			if(info.getClassName()==null) return;
-		
+
 			result = new CKNumber(sourceFilePath, info.getClassName(), info.getType());
-			
+
 			int loc = new LOCCalculator().calculate(new FileInputStream(sourceFilePath));
 			result.setLoc(loc);
-			
+
 			for(Metric visitor : metrics.call()) {
+//				System.out.println("BEG: " + visitor.getClass());
 				visitor.execute(cu, result, report);
+//				System.out.println(visitor.getClass());
 				visitor.setResult(result);
 			}
-			log.info(result);
+			//log.info(result)
 			report.add(result);
 		} catch(Exception e) {
 			if(result!=null) result.error();

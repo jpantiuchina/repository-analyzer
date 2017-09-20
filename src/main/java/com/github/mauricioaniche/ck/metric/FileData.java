@@ -5,10 +5,9 @@ public class FileData {
     private String file;
     private boolean isSmelly = false;
     private boolean isBlobClass = false;
-    private boolean isClassDataSBP = false;
-    private boolean isComplexClass = false;
-    private boolean isFuncDecomp = false;
-    private boolean isSpaghettiCode = false;
+    private boolean isCoupling = false;
+    private boolean isNPath = false;
+
 
     private int cbo;
     private int wmc;
@@ -39,17 +38,12 @@ public class FileData {
     public boolean getIsBlobClass() { return this.isBlobClass; }
     public void setIsBlobClass (boolean isBlobClass) {this.isBlobClass = isBlobClass; }
 
-    public boolean getIsClassDataSBP() { return this.isClassDataSBP; }
-    public void setIsClassDataSBP (boolean isClassDataSBP) {this.isClassDataSBP = isClassDataSBP; }
+    public boolean getIsCoupling() { return this.isCoupling; }
+    public void setIsCoupling (boolean isCoupling) {this.isCoupling = isCoupling; }
 
-    public boolean getIsComplexClass() { return this.isComplexClass; }
-    public void setIsComplexClass (boolean isComplexCalss) {this.isComplexClass = isComplexCalss; }
+    public boolean getNPath() { return this.isNPath; }
+    public void setNPath (boolean isNPath) {this.isNPath = isNPath; }
 
-    public boolean getIisFuncDecomp() { return this.isFuncDecomp; }
-    public void setIisFuncDecomp (boolean isFuncDecomp) {this.isFuncDecomp = isFuncDecomp; }
-
-    public boolean getIsSpaghettiCode() { return this.isSpaghettiCode; }
-    public void setIisSpaghettiCode (boolean isSpaghettiCode) {this.isSpaghettiCode = isSpaghettiCode; }
 
 
     public int getCBO()            { return this.cbo;  }

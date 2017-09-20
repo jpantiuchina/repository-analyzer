@@ -26,13 +26,13 @@ final class Git
 
         Process process = Runtime.getRuntime().exec("git clone " + repositoryURL + " " + PATH_TO_REPOSITORY);
 
-        System.err.println("Cloning repository: " + repositoryURL + " into folder " + PATH_TO_REPOSITORY);
+        System.out.println("Cloning repository: " + repositoryURL + " into folder " + PATH_TO_REPOSITORY);
         int returned = process.waitFor();
 
         if (returned == 0 && PATH_TO_REPOSITORY.isDirectory())
-            System.err.println("Repository " + repositoryURL + " copied successfully");
+            System.out.println("Repository " + repositoryURL + " copied successfully");
         else if (PATH_TO_REPOSITORY.isDirectory())
-            System.err.println("Repository " + repositoryURL + " was not copied, because it already exist.");
+            System.out.println("Repository " + repositoryURL + " was not copied, because it already exist.");
         else
         {
             ResultFileWriter.log();
@@ -77,7 +77,7 @@ final class Git
      static List<String> executeCommandsAndReadLinesFromConsole(String outputPathToFile, String... command) throws IOException
     {
 
-        System.out.println("Received command: " + Arrays.toString(command) + " Lines from console will be saved to " + outputPathToFile);
+        //System.out.println("Received command: " + Arrays.toString(command) + " Lines from console will be saved to " + outputPathToFile);
         Process process = Runtime.getRuntime().exec(command);
 
         BufferedReader stdInput = new BufferedReader(new

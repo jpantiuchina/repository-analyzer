@@ -38,15 +38,15 @@ class IntervalSplitter
     {
         removeFileIfPresent(outputFilePath);
 
-        System.out.println();
+       // System.out.println();
 
             for (String commit : commitIds)
             {
-                System.out.print(commit);
-                System.out.print(' ');
+            //    System.out.print(commit);
+            //    System.out.print(' ');
                 writeLineToFile(commit, outputFilePath);
             }
-        System.out.println();
+      //  System.out.println();
     }
 
 

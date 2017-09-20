@@ -5,6 +5,7 @@ import com.github.mauricioaniche.ck.metric.FileData;
 import pipeline.SmellDetector;
 import pipeline.WholePipeline;
 
+import javax.sound.midi.Soundbank;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.PrintStream;
@@ -34,54 +35,53 @@ public class Runner {
 
 	}
 
-	public static void computeQualityMetrics(String path, String csvPath, HashMap <String, ArrayList<String>> files) throws FileNotFoundException
+	public static void computeQualityMetrics(String pathToRepository, String pathToQualityMetricsResultFile, HashMap <String, ArrayList<String>> fileNamesWithSmells) throws FileNotFoundException
 	{
 
-		CKReport report = new CK().calculate(path);
+		CKReport report = new CK().calculate(pathToRepository);
 
-		PrintStream ps = new PrintStream(csvPath);
-		ps.println("file,isSmelly,IsBlob,IsClassDataSBPCBO,IsComplexClass,IsFuncDecomp,IsSpaghettiCode,CBO, WMC,DIT,NOC,RFC,LCOM,NOM,NOPM,NOSM,NOF,NOPF,NOSF,NOSI,LOC");
+	//	System.out.println("Path: " + pathToRepository);
+
+		PrintStream ps = new PrintStream(pathToQualityMetricsResultFile);
+		ps.println("file,isSmelly,IsBlob,isCoupling,IsNPath,CBO,WMC,DIT,NOC,RFC,LCOM,NOM,NOPM,NOSM,NOF,NOPF,NOSF,NOSI,LOC");
 
 		for(CKNumber result : report.all()) {
 			if(result.isError()) continue;
 
 			Path pathAbsolute = Paths.get(result.getFile());
-			Path pathBase = Paths.get(path).toAbsolutePath();
-			Path pathRelative = pathBase.relativize(pathAbsolute);
+			Path pathBase = Paths.get(pathToRepository).toAbsolutePath();
+			//Path pathRelative = pathBase.relativize(pathAbsolute);
 			//System.err.println(pathRelative);
-			String newPath = pathRelative.toString().replaceFirst("\\.java$", "").replace(File.separatorChar, '.');
-			//System.err.println(newPath);
+			String newPath = pathAbsolute.toString();
 
 			FileData classFileData = new FileData(newPath);
 
-			ArrayList<String> smells = files.get(newPath);
 
-
-			//System.err.println("SMELLS: " + smells +" for file " + newPath);
+			ArrayList<String> smells = fileNamesWithSmells.get(newPath);
 
 			if (smells != null)
 			{
+//				System.out.println("===");
+//				System.out.println("fileNameWithSmells: " + fileNamesWithSmells);
+//				System.out.println("newPath: " + newPath);
+//				System.out.println("smells: " + smells);
+//				System.out.println("===");
+//				System.out.println("SMELLS: " + smells +" for file " + newPath);
+//
+
 				for (String smell : smells)
 				{
-					if (smell.contains("god"))
+					if (smell.contains("God"))
 					{
 						classFileData.setIsBlobClass(true);
 					}
-					if (smell.contains("cdsbp"))
+					if (smell.contains("Coupling"))
 					{
-						classFileData.setIsClassDataSBP(true);
+						classFileData.setIsCoupling(true);
 					}
-					if (smell.contains("complex"))
+					if (smell.contains("NPath"))
 					{
-						classFileData.setIsComplexClass(true);
-					}
-					if (smell.contains("spagh"))
-					{
-						classFileData.setIisSpaghettiCode(true);
-					}
-					if (smell.contains("func"))
-					{
-						classFileData.setIisFuncDecomp(true);
+						classFileData.setNPath(true);
 					}
 					classFileData.setIsSmelly(true);
 					//System.err.println("Setting smell " + smell + " to file " + classFileData.getFile());
@@ -104,19 +104,14 @@ public class Runner {
 			classFileData.setNOSI(result.getNosi());
 			classFileData.setLOC (result.getLoc());
 
-
-
-
 			allFiles.add(classFileData);
 
 			ps.println(
 					classFileData.getFile() + "," +
 							classFileData.getIsSmelly() + "," +
 							classFileData.getIsBlobClass() + "," +
-							classFileData.getIsClassDataSBP() + "," +
-							classFileData.getIsComplexClass() + "," +
-							classFileData.getIisFuncDecomp() + "," +
-							classFileData.getIsSpaghettiCode() + "," +
+							classFileData.getIsCoupling() + "," +
+							classFileData.getNPath() + "," +
 							result.getCbo() + "," +
 							result.getWmc() + "," +
 							result.getDit() + "," +

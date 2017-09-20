@@ -57,19 +57,15 @@ public class SmellDetector
 
         String linesFromConsoleRunningSmellDetector = OUTPUT_FOLDER_NAME + "linesFromConsoleRunningSmellDetector.txt";
 
-        //call cs-detector
+        //call pmd for 3 types of smells
         if (operatingSystem.contains("Mac"))
         {
             //for Mac
-
             Git.executeCommandsAndReadLinesFromConsole(linesFromConsoleRunningSmellDetector, "/bin/bash", "-c", "pmd-bin-5.8.1/bin/run.sh pmd -d " + pathToRepository + " -f csv -R java-design |grep 'God' >" + PATH_TO_RESULT_FILE );
             Git.executeCommandsAndReadLinesFromConsole(linesFromConsoleRunningSmellDetector, "/bin/bash", "-c", "pmd-bin-5.8.1/bin/run.sh pmd -d " + pathToRepository + " -f csv -R java-coupling |grep 'CouplingBetweenObjects' >>" + PATH_TO_RESULT_FILE );
             Git.executeCommandsAndReadLinesFromConsole(linesFromConsoleRunningSmellDetector, "/bin/bash", "-c", "pmd-bin-5.8.1/bin/run.sh pmd -d " + pathToRepository + " -f csv -R java-codesize |grep 'NPathComplexity' >>" + PATH_TO_RESULT_FILE );
 
-
-
-           // Git.executeCommandsAndReadLinesFromConsole(linesFromConsoleRunningSmellDetector,"/bin/bash", "-c", "java -jar cs-detector.jar " + pathToRepository + " " + PATH_TO_RESULT_FILE);
-            System.out.println(" Smells were written to file: " + PATH_TO_RESULT_FILE);
+           // System.out.println(" Smells were written to file: " + PATH_TO_RESULT_FILE);
         }
 //        else if (operatingSystem.contains("Windows"))
 //        {
@@ -92,28 +88,37 @@ public static HashMap <String,ArrayList<String>> readSmellsFromFileToHashmap(Str
     HashMap <String, ArrayList<String>> files = new HashMap<>();
     try (BufferedReader br = new BufferedReader(new FileReader(filePath)))
     {
+
         String sCurrentLine;
         String fileName;
         String smellType;
 
         while ((sCurrentLine = br.readLine()) != null) {
 
-            String[] line = sCurrentLine.split(",");
-            fileName = line[0];
-            smellType = line[1];
+            String[] line = sCurrentLine.split("(?<=\"),(?=\")");
+//            System.err.println("filePath: " + filePath);
+//            System.err.println(Arrays.toString(line));
+//            System.err.println(sCurrentLine);
+            fileName = line[2].replace("\"","");
+            smellType = line[7].replace("\"","");
 
             ArrayList<String> smells = files.get(fileName);
             //if filename is not present in the hashmap
             if (smells == null)
             {
                 smells = new ArrayList<>();
-                files.put(fileName,smells);
+                files.put(fileName, smells);
             }
 
-            System.err.println(" FILENAME WITH SMELL: "+fileName);
-            System.err.println(" SMELL TYPE: "+smellType);
-            System.err.println(" ALREDY PRESENT SMELLS "+smells);
+//            System.err.println("---");
+//            System.err.println(" FILENAME WITH SMELL: " + fileName);
+//            System.err.println(" SMELL TYPE: " + smellType);
+//            System.err.println();
+//            System.err.println(" ALREDY PRESENT SMELLS " + smells);
+//            System.err.println("---");
 
+            //add smellType only if it is not present
+            if (!smells.contains(smellType))
             smells.add(smellType);
         }
 

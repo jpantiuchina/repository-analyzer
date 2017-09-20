@@ -44,7 +44,7 @@ class ResultFileWriter
         {
             if(file.delete())
             {
-                System.err.println("old " + fileName + " was deleted");
+                System.out.println("old file " + fileName + " was deleted");
             }
             else
             {

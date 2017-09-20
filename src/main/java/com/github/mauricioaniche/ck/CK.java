@@ -61,15 +61,15 @@ public class CK {
 	public CKReport calculate(String path) {
 		String[] srcDirs = FileUtils.getAllDirs(path);
 		String[] javaFiles = FileUtils.getAllJavaFiles(path);
-		log.info("Found " + javaFiles.length + " java files");
+		//log.info("Found " + javaFiles.length + " java files");
 		
 		MetricsExecutor storage = new MetricsExecutor(() -> metrics());
 		
 		List<List<String>> partitions = Lists.partition(Arrays.asList(javaFiles), MAX_AT_ONCE);
-		log.info("Max partition size: " + MAX_AT_ONCE + ", total partitions=" + partitions.size());
+		//log.info("Max partition size: " + MAX_AT_ONCE + ", total partitions=" + partitions.size());
 
 		for(List<String> partition : partitions) {
-			log.info("Next partition");
+		//	log.info("Next partition");
 			ASTParser parser = ASTParser.newParser(AST.JLS8);
 			
 			parser.setResolveBindings(true);
@@ -82,7 +82,7 @@ public class CK {
 			parser.createASTs(partition.toArray(new String[partition.size()]), null, new String[0], storage, null);
 		}
 		
-		log.info("Finished parsing");
+		//log.info("Finished parsing");
 		return storage.getReport();
 	}
 	
