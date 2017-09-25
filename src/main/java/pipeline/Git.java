@@ -4,6 +4,7 @@ import java.io.*;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.*;
+import java.util.concurrent.TimeUnit;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -13,7 +14,7 @@ import static pipeline.ResultFileWriter.removeFileIfPresent;
 final class Git
 {
 
-   private static File createPathToRepository(String clonedRepoFolderName)
+   static File createPathToRepository(String clonedRepoFolderName)
    {
 
        return new File( OUTPUT_FOLDER_NAME + clonedRepoFolderName);
@@ -26,7 +27,7 @@ final class Git
 
         Process process = Runtime.getRuntime().exec("git clone " + repositoryURL + " " + PATH_TO_REPOSITORY);
 
-        System.out.println("Cloning repository: " + repositoryURL + " into folder " + PATH_TO_REPOSITORY);
+        System.out.println("Trying to clone repository: " + repositoryURL + " into folder " + PATH_TO_REPOSITORY);
         int returned = process.waitFor();
 
         if (returned == 0 && PATH_TO_REPOSITORY.isDirectory())
@@ -145,6 +146,18 @@ final class Git
         }
         return calendarDate;
     }
+
+
+    static long getNumDaysBtw2Dates(Calendar startDate, Calendar endDate)
+    {
+        Date end = endDate.getTime();
+        Date start = startDate.getTime();
+        long diff = 0;
+        long timeDiff = Math.abs(start.getTime() - end.getTime());
+        diff = TimeUnit.MILLISECONDS.toDays(timeDiff);
+        return diff;
+    }
+
 
 
     static Calendar getCommitDateAfterNDays(Calendar date, int days) throws ParseException

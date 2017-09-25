@@ -44,7 +44,7 @@ class ResultFileWriter
         {
             if(file.delete())
             {
-                System.out.println("old file " + fileName + " was deleted");
+                System.out.println("file " + fileName + " was rewritten");
             }
             else
             {
