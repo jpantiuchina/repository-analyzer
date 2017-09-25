@@ -82,8 +82,12 @@ class FileHandler
 
             ArrayList<String> commitsInBetweenRecent = getAllCommitsBetween(firstRecentCommit, commitID, commitIds);
             commitsInBetweenRecent = removeCommitsInWhichFileWasNotPresent(fileName,commitsInBetweenRecent);
-            ArrayList<ArrayList<Double>> metricsForFileRecent = getQualityMetricsForFileInCommits(fileName, commitsInBetweenRecent);
-            slopesRecent = getSlopeForAllFileMetrics(metricsForFileRecent);
+            if (commitsInBetweenRecent.size() > 1)
+            {
+                ArrayList<ArrayList<Double>> metricsForFileRecent = getQualityMetricsForFileInCommits(fileName, commitsInBetweenRecent);
+                slopesRecent = getSlopeForAllFileMetrics(metricsForFileRecent);
+            }
+
         }
 
         // 3 + smells
@@ -143,7 +147,7 @@ class FileHandler
                 commitsInWhichFileIsPresent.add(commitId);
             }
         }
-        return commitsInBetweenHistory;
+        return commitsInWhichFileIsPresent;
     }
 
 
@@ -166,7 +170,8 @@ class FileHandler
 
         PrintStream ps = new PrintStream(resultFilePath);//TODO
         ps.println("fileName, currentCommitId, commitCountFrom1st, numOfDaysFrom1stCommit, removedInCommitCount, " +
-                "removedInCommitId, RemovedAfterDays, becameSmellyInCommitCount, becameSmellyInCommitId, becameSmellyAfterDays, " +
+                "removedInCommitId, RemovedAfterDays, " +
+                "becameSmellyInCommitCount, becameSmellyInCommitId, becameSmellyAfterDays, " +
                 "CBO,      WMC,      DIT,      NOC,      RFC,      LCOM,      NOM,      NOPM,      NOSM,      NOF,      NOPF,      NOSF,      NOSI,      LOC," +
                 "CBOslopeAllHistory, WMCslopeAllHistory, DITslopeAllHistory, NOCslopeAllHistory, RFCslopeAllHistory, LCOMslopeAllHistory, NOMslopeAllHistory, NOPMslopeAllHistory, NOSMslopeAllHistory, NOFslopeAllHistory, NOPFslopeAllHistory, NOSFslopeAllHistory, NOSIslopeAllHistory, LOCslopeAllHistory, " +
                 "CBOslope10Recent, WMCslope10Recent, DITslope10Recent, NOCslope10Recent, RFCslope10Recent, LCOMslope10Recent, NOMslope10Recent, NOPMslope10Recent, NOSMslope10Recent, NOFslope10Recent, NOPFslope10Recent, NOSFslope10Recent, NOSIslope10Recent, LOCslope10Recent, " +
@@ -382,7 +387,7 @@ class FileHandler
         for (int i = 0; i < allCommits.size(); i++)
         {
             //System.out.println("i= " +i);
-            if (i > indexPast  && i < indexCurrent)
+            if (i >= indexPast  && i < indexCurrent)
             {
                 commitsInBetween.add(allCommits.get(i));
             }
