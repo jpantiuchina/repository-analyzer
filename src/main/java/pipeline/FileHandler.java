@@ -100,6 +100,9 @@ class FileHandler
 
         ArrayList <String> noSmells = new ArrayList<>(Arrays.asList("false","false","false","false"));
 
+        String becameBlobIn = "false";
+        String becameCoupling = "false";
+        String becameNPath = "false";
 
         if (smells == null) //file is not smelly
         {
@@ -115,6 +118,14 @@ class FileHandler
                 becameSmellyInCommitId = commitIds.get(becameSmellyInCommitCount);
                 Calendar becameSmellyInCommitDate = commitIdsWithDates.get(becameSmellyInCommitId);
                 becameSmellyAfterDays = getNumDaysBtw2Dates(commitDate,becameSmellyInCommitDate);
+
+                ArrayList <String> becameSmells;
+                becameSmells = getSmellsForFileInCommit(fileName,becameSmellyInCommitId);
+                becameBlobIn = becameSmells.get(1);
+                becameCoupling = becameSmells.get(2);
+                becameNPath = becameSmells.get(3);
+
+
             }
             else // file never became smelly
                 becameSmellyInCommitCount = -1;
@@ -133,7 +144,7 @@ class FileHandler
                 slopesRecent+ "\n" +  currentSmells + "\n" +  resultFilePath+ "\n" +  becameSmellyInCommitCount+ "\n" +  becameSmellyInCommitId+ "\n" +  becameSmellyAfterDays );
 
         addFinalFileData(fileName, commitID, commitCount, numOfDaysFrom1stCommit, removedInCommitCount, removedInCommitId, removedAfterDays, metrics, slopesHistory,
-                slopesRecent, currentSmells, resultFilePath, becameSmellyInCommitCount, becameSmellyInCommitId, becameSmellyAfterDays );
+                slopesRecent, currentSmells, resultFilePath, becameSmellyInCommitCount, becameSmellyInCommitId, becameSmellyAfterDays, becameBlobIn, becameCoupling, becameNPath );
 
     }
 
@@ -172,6 +183,7 @@ class FileHandler
         ps.println("fileName, currentCommitId, commitCountFrom1st, numOfDaysFrom1stCommit, removedInCommitCount, " +
                 "removedInCommitId, RemovedAfterDays, " +
                 "becameSmellyInCommitCount, becameSmellyInCommitId, becameSmellyAfterDays, " +
+                "becameBlob, becameCoupling, becameNPath," +
                 "CBO,      WMC,      DIT,      NOC,      RFC,      LCOM,      NOM,      NOPM,      NOSM,      NOF,      NOPF,      NOSF,      NOSI,      LOC," +
                 "CBOslopeAllHistory, WMCslopeAllHistory, DITslopeAllHistory, NOCslopeAllHistory, RFCslopeAllHistory, LCOMslopeAllHistory, NOMslopeAllHistory, NOPMslopeAllHistory, NOSMslopeAllHistory, NOFslopeAllHistory, NOPFslopeAllHistory, NOSFslopeAllHistory, NOSIslopeAllHistory, LOCslopeAllHistory, " +
                 "CBOslope10Recent, WMCslope10Recent, DITslope10Recent, NOCslope10Recent, RFCslope10Recent, LCOMslope10Recent, NOMslope10Recent, NOPMslope10Recent, NOSMslope10Recent, NOFslope10Recent, NOPFslope10Recent, NOSFslope10Recent, NOSIslope10Recent, LOCslope10Recent, " +
@@ -186,7 +198,9 @@ class FileHandler
     static void addFinalFileData(String fileName, String currentCommitId, int commitCount, long numOfDaysFrom1stCommit, int removedInCommitCount,
                                  String removedInCommitId, long removedAfterDays, ArrayList<Double> metrics,  ArrayList<Double> slopesHistory,
                                  ArrayList<Double> slopesRecent, ArrayList<String> smells, String resultFilePath,
-                                 int becameSmellyInCommitCount, String becameSmellyInCommitId, long becameSmellyAfterDays) throws IOException {
+                                 int becameSmellyInCommitCount, String becameSmellyInCommitId, long becameSmellyAfterDays,
+                                 String becameBlobIn, String becameCoupling, String becameNPath) throws IOException
+    {
         StringBuilder resultLine = new StringBuilder();
 
         resultLine.append(fileName).append(",")
@@ -198,7 +212,11 @@ class FileHandler
                 .append(removedAfterDays).append(",")
                 .append(becameSmellyInCommitCount).append(",")
                 .append(becameSmellyInCommitId).append(",")
-                .append(becameSmellyAfterDays).append(",");
+                .append(becameSmellyAfterDays).append(",")
+                .append(becameBlobIn).append(",")
+                .append(becameCoupling).append(",")
+                .append(becameNPath).append(",")
+        ;
 
 
          //14 quality metrics
