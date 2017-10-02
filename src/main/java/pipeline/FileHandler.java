@@ -1,7 +1,5 @@
 package pipeline;
 
-import com.sun.xml.internal.bind.v2.TODO;
-
 import java.io.*;
 import java.text.ParseException;
 import java.util.*;
@@ -100,9 +98,9 @@ class FileHandler
 
         ArrayList <String> noSmells = new ArrayList<>(Arrays.asList("false","false","false","false"));
 
-        String becameBlobIn = "false";
-        String becameCoupling = "false";
-        String becameNPath = "false";
+        String becameBlobIn = null;
+        String becameCoupling = null;
+        String becameNPath = null;
 
         if (smells == null) //file is not smelly
         {

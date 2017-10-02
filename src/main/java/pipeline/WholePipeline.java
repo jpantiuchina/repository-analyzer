@@ -18,6 +18,9 @@ public class WholePipeline
 {
     //public static HashMap<String,String> smellTypes = new HashMap();
 
+    //TODO all 3 types of smells report in when became smelly
+    //TODO save output folder for the repository
+    //TODO check slopes calculation
 
     public static void main(String[] args) throws IOException, InterruptedException, ParseException
     {
