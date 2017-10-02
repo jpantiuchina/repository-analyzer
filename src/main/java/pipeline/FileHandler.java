@@ -4,10 +4,14 @@ import java.io.*;
 import java.text.ParseException;
 import java.util.*;
 
+//import static pipeline.Git.OUTPUT_FOLDER_NAME;
 import static pipeline.Git.getNumDaysBtw2Dates;
 import static pipeline.Git.readDateFromLine;
 import static pipeline.ResultFileWriter.*;
 import static pipeline.SlopeCalculation.getSlopeForFileMetric;
+import static pipeline.WholePipeline.COMMIT_IDS_FILE_PATH;
+import static pipeline.WholePipeline.OUTPUT_FOLDER_NAME;
+//import static pipeline.WholePipeline.OUTPUT_FOLDER_NAME;
 
 
 class FileHandler
@@ -271,9 +275,9 @@ class FileHandler
     }
 
 
-     static void saveCommitIdsToFile(ArrayList<String> commitIds, String outputFilePath) throws IOException, ParseException
+     static void saveCommitIdsToFile(ArrayList<String> commitIds) throws IOException, ParseException
     {
-        removeFileIfPresent(outputFilePath);
+        removeFileIfPresent(COMMIT_IDS_FILE_PATH);
 
        // System.out.println();
 
@@ -281,7 +285,7 @@ class FileHandler
             {
             //    System.out.print(commit);
             //    System.out.print(' ');
-                writeLineToFile(commit, outputFilePath);
+                writeLineToFile(commit, COMMIT_IDS_FILE_PATH);
             }
       //  System.out.println();
     }

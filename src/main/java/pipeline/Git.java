@@ -8,22 +8,36 @@ import java.util.concurrent.TimeUnit;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import static pipeline.ResultFileWriter.OUTPUT_FOLDER_NAME;
+//import static pipeline.ResultFileWriter.OUTPUT_FOLDER_NAME;
 import static pipeline.ResultFileWriter.removeFileIfPresent;
+import static pipeline.WholePipeline.*;
+//import static pipeline.WholePipeline.OUTPUT_FOLDER_NAME;
+
 
 final class Git
 {
 
-   static File createPathToRepository(String clonedRepoFolderName)
-   {
 
-       return new File( OUTPUT_FOLDER_NAME + clonedRepoFolderName);
+
+
+    static void createPaths()
+   {
+       OUTPUT_FOLDER_NAME = "history/output-" + REPO_NAME + "/";
+
+       PATH_TO_REPOSITORY = new File(OUTPUT_FOLDER_NAME + REPO_NAME);
+
+       REPOSITORY_HISTORY_FILE_PATH = PATH_TO_REPOSITORY + "/linesFromConsole.txt";
+       COMMIT_IDS_FILE_PATH = PATH_TO_REPOSITORY + "/sorted_commit_Ids.txt";
+       LINES_FROM_CONSOLE_ON_COMMITS_CHECKOUT = PATH_TO_REPOSITORY + "/LINES_FROM_CONSOLE_ON_COMMITS_CHECKOUT.txt";
+       LINES_FROM_CONSOLE_RUNNING_PMD = PATH_TO_REPOSITORY + "/LINES_FROM_CONSOLE_RUNNING_PMD.txt";
    }
 
 
-    static String clone_repository(String repositoryURL, String clonedRepoFolderName) throws IOException, InterruptedException
+
+    static void clone_repository(String repositoryURL) throws IOException, InterruptedException
     {
-        File PATH_TO_REPOSITORY = createPathToRepository(clonedRepoFolderName);
+        createPaths();
+        System.out.println("PPP" +PATH_TO_REPOSITORY);
 
         Process process = Runtime.getRuntime().exec("git clone " + repositoryURL + " " + PATH_TO_REPOSITORY);
 
@@ -40,15 +54,14 @@ final class Git
             System.err.println("ERROR. Repository " + repositoryURL + " was not copied for unknown reason. " + "returned value: " + returned);
             System.exit(2);
         }
-        return PATH_TO_REPOSITORY.toString();
     }
 
 
 
 
-     static List<String> retrieveCommitsForRepoAndSaveResultsToFile(String inputPathToRepository, String outputPathToRepoHistoryFile) throws IOException
+     static List<String> retrieveCommitsForRepoAndSaveResultsToFile() throws IOException
     {
-        removeFileIfPresent(outputPathToRepoHistoryFile);
+        removeFileIfPresent(REPOSITORY_HISTORY_FILE_PATH);
 
         String operatingSystem = System.getProperty("os.name");
 
@@ -56,12 +69,12 @@ final class Git
         if (operatingSystem.contains("Mac"))
         {
             //for Mac
-            linesFromConsole = executeCommandsAndReadLinesFromConsole(outputPathToRepoHistoryFile, "/bin/bash", "-c", "cd " + inputPathToRepository + " && git log --reverse --pretty=format:'%H =%ad='");
+            linesFromConsole = executeCommandsAndReadLinesFromConsole(REPOSITORY_HISTORY_FILE_PATH, "/bin/bash", "-c", "cd " + PATH_TO_REPOSITORY + " && git log --reverse --pretty=format:'%H =%ad='");
         }
         else if (operatingSystem.contains("Windows"))
         {
             //for Windows
-            linesFromConsole = executeCommandsAndReadLinesFromConsole(outputPathToRepoHistoryFile, "cmd /c cd " + inputPathToRepository + " && git log --reverse --pretty=format:\"%H =%ad=\" ");
+            linesFromConsole = executeCommandsAndReadLinesFromConsole(REPOSITORY_HISTORY_FILE_PATH, "cmd /c cd " + PATH_TO_REPOSITORY + " && git log --reverse --pretty=format:\"%H =%ad=\" ");
         }
         else
         {

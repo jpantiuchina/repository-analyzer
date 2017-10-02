@@ -8,7 +8,10 @@ import java.nio.file.Paths;
 import java.text.ParseException;
 import java.util.*;
 
-import static pipeline.ResultFileWriter.OUTPUT_FOLDER_NAME;
+//import static pipeline.Git.PATH_TO_REPOSITORY;
+//import static pipeline.ResultFileWriter.OUTPUT_FOLDER_NAME;
+import static pipeline.WholePipeline.PATH_TO_REPOSITORY;
+import static pipeline.WholePipeline.LINES_FROM_CONSOLE_RUNNING_PMD;
 
 
 /**
@@ -51,26 +54,25 @@ public class SmellDetector
         readSmellsFromFileToHashmap(PATH_TO_RESULT_FILE);
     }
 
-    static void runSmellDetector(String pathToRepository, String PATH_TO_RESULT_FILE) throws IOException
+    static void runSmellDetector(String PATH_TO_RESULT_FILE) throws IOException
     {
         String operatingSystem = System.getProperty("os.name");
-
-        String linesFromConsoleRunningSmellDetector = OUTPUT_FOLDER_NAME + "linesFromConsoleRunningSmellDetector.txt";
 
         //call pmd for 3 types of smells
         if (operatingSystem.contains("Mac"))
         {
             //for Mac
-            Git.executeCommandsAndReadLinesFromConsole(linesFromConsoleRunningSmellDetector, "/bin/bash", "-c", "pmd-bin-5.8.1/bin/run.sh pmd -d " + pathToRepository + " -f csv -R java-design |grep 'God' >" + PATH_TO_RESULT_FILE );
-            Git.executeCommandsAndReadLinesFromConsole(linesFromConsoleRunningSmellDetector, "/bin/bash", "-c", "pmd-bin-5.8.1/bin/run.sh pmd -d " + pathToRepository + " -f csv -R java-coupling |grep 'CouplingBetweenObjects' >>" + PATH_TO_RESULT_FILE );
-            Git.executeCommandsAndReadLinesFromConsole(linesFromConsoleRunningSmellDetector, "/bin/bash", "-c", "pmd-bin-5.8.1/bin/run.sh pmd -d " + pathToRepository + " -f csv -R java-codesize |grep 'NPathComplexity' >>" + PATH_TO_RESULT_FILE );
+            Git.executeCommandsAndReadLinesFromConsole(LINES_FROM_CONSOLE_RUNNING_PMD, "/bin/bash", "-c", "pmd-bin-5.8.1/bin/run.sh pmd -d " + PATH_TO_REPOSITORY + " -f csv -R java-design |grep 'God' >" + PATH_TO_RESULT_FILE );
+            Git.executeCommandsAndReadLinesFromConsole(LINES_FROM_CONSOLE_RUNNING_PMD, "/bin/bash", "-c", "pmd-bin-5.8.1/bin/run.sh pmd -d " + PATH_TO_REPOSITORY + " -f csv -R java-coupling |grep 'CouplingBetweenObjects' >>" + PATH_TO_RESULT_FILE );
+            Git.executeCommandsAndReadLinesFromConsole(LINES_FROM_CONSOLE_RUNNING_PMD, "/bin/bash", "-c", "pmd-bin-5.8.1/bin/run.sh pmd -d " + PATH_TO_REPOSITORY
+                    + " -f csv -R java-codesize |grep 'NPathComplexity' >>" + PATH_TO_RESULT_FILE );
 
            // System.out.println(" Smells were written to file: " + PATH_TO_RESULT_FILE);
         }
 //        else if (operatingSystem.contains("Windows"))
 //        {
 //            //for Windows
-//            Git.executeCommandsAndReadLinesFromConsole(linesFromConsoleRunningSmellDetector,"cmd /c java -jar cs-detector.jar " + pathToRepository + " " + PATH_TO_RESULT_FILE);
+//            Git.executeCommandsAndReadLinesFromConsole(LINES_FROM_CONSOLE_RUNNING_PMD,"cmd /c java -jar cs-detector.jar " + pathToRepository + " " + PATH_TO_RESULT_FILE);
 //
 //        }
         else

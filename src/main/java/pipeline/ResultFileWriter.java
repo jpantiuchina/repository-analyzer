@@ -5,10 +5,12 @@ import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
 
+import static pipeline.WholePipeline.REPO_NAME;
+
 
 class ResultFileWriter
 {
-    final static String OUTPUT_FOLDER_NAME = "output/";
+
 
     private final static String TAG = Git.class.getCanonicalName();
     //final static String ALL_HISTORY_FILE_NAME = PATH_TO_REPOSITORY + "/all_commits.txt";
