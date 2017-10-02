@@ -123,7 +123,7 @@
 				<configuration>
 					<archive>
 						<manifest>
-							<mainClass>br.com.metricminer2.ck.Runner</mainClass>
+							<mainClass>pipeline.WholePipeline</mainClass>
 						</manifest>
 					</archive>
 					<descriptorRefs>
