@@ -35,7 +35,7 @@ final class Git
 
     static void retrieveWholeRepoHistory(String repositoryURL) throws IOException, InterruptedException, ParseException {
 
-        Git.cloneRepository(repositoryURL);
+        //Git.cloneRepository(repositoryURL);
 
         List<String> linesFromConsole = Git.retrieveCommits();
 

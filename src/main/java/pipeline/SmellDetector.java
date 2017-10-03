@@ -25,7 +25,11 @@ public class SmellDetector
     {
         //log();
 
-       // Git.executeCommandsAndReadLinesFromConsole(new File("."), "pmd-bin-5.8.1/bin/run.sh", "pmd", "-d", PATH_TO_REPOSITORY.toString(), "-f", "csv", "-R", "java-design","|","grep'God'>", pathToSmellsResultFile);
+        Git.executeCommandsAndReadLinesFromConsole(new File("."),
+                "./run.sh",
+                PATH_TO_REPOSITORY.toString(),
+                pathToSmellsResultFile);
+
 //        Git.executeCommandsAndReadLinesFromConsole(new File("."), "pmd-bin-5.8.1/bin/run.sh pmd -d " + PATH_TO_REPOSITORY + " -f csv -R java-coupling |grep 'CouplingBetweenObjects' >>" + pathToSmellsResultFile );
 //        Git.executeCommandsAndReadLinesFromConsole(new File("."), "pmd-bin-5.8.1/bin/run.sh pmd -d " + PATH_TO_REPOSITORY
 //                + " -f csv -R java-codesize |grep 'NPathComplexity' >>" + pathToSmellsResultFile );
@@ -35,11 +39,11 @@ public class SmellDetector
 
 
         //old way
-        Git.executeCommandsAndReadLinesFromConsoleOLD(LINES_FROM_CONSOLE_RUNNING_PMD, "/bin/bash", "-c", "pmd-bin-5.8.1/bin/run.sh pmd -d " + PATH_TO_REPOSITORY + " -f csv -R java-design |grep 'God' >" + pathToSmellsResultFile );
-        Git.executeCommandsAndReadLinesFromConsoleOLD(LINES_FROM_CONSOLE_RUNNING_PMD, "/bin/bash", "-c", "pmd-bin-5.8.1/bin/run.sh pmd -d " + PATH_TO_REPOSITORY + " -f csv -R java-coupling |grep 'CouplingBetweenObjects' >>" + pathToSmellsResultFile );
-        Git.executeCommandsAndReadLinesFromConsoleOLD(LINES_FROM_CONSOLE_RUNNING_PMD, "/bin/bash", "-c", "pmd-bin-5.8.1/bin/run.sh pmd -d " + PATH_TO_REPOSITORY
-                + " -f csv -R java-codesize |grep 'NPathComplexity' >>" + pathToSmellsResultFile );
-
+//        Git.executeCommandsAndReadLinesFromConsoleOLD(LINES_FROM_CONSOLE_RUNNING_PMD, "/bin/bash", "-c", "pmd-bin-5.8.1/bin/run.sh pmd -d " + PATH_TO_REPOSITORY + " -f csv -R java-design |grep 'God' >" + pathToSmellsResultFile );
+//        Git.executeCommandsAndReadLinesFromConsoleOLD(LINES_FROM_CONSOLE_RUNNING_PMD, "/bin/bash", "-c", "pmd-bin-5.8.1/bin/run.sh pmd -d " + PATH_TO_REPOSITORY + " -f csv -R java-coupling |grep 'CouplingBetweenObjects' >>" + pathToSmellsResultFile );
+//        Git.executeCommandsAndReadLinesFromConsoleOLD(LINES_FROM_CONSOLE_RUNNING_PMD, "/bin/bash", "-c", "pmd-bin-5.8.1/bin/run.sh pmd -d " + PATH_TO_REPOSITORY
+//                + " -f csv -R java-codesize |grep 'NPathComplexity' >>" + pathToSmellsResultFile );
+//
 
     }
 
