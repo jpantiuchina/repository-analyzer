@@ -1,6 +1,9 @@
 package pipeline;
 
+import org.apache.commons.io.FileUtils;
+
 import java.io.*;
+import java.nio.charset.Charset;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.*;
@@ -10,6 +13,7 @@ import java.util.regex.Pattern;
 
 //import static pipeline.ResultFileWriter.OUTPUT_FOLDER_NAME;
 import static pipeline.ResultFileWriter.removeFileIfPresent;
+import static pipeline.Util.log;
 import static pipeline.WholePipeline.*;
 //import static pipeline.WholePipeline.OUTPUT_FOLDER_NAME;
 
@@ -18,80 +22,87 @@ final class Git
 {
 
 
-
-
-    static void createPaths()
-   {
-       OUTPUT_FOLDER_NAME = "history/output-" + REPO_NAME + "/";
-
-       PATH_TO_REPOSITORY = new File(OUTPUT_FOLDER_NAME + REPO_NAME);
-
-       REPOSITORY_HISTORY_FILE_PATH = PATH_TO_REPOSITORY + "/linesFromConsole.txt";
-       COMMIT_IDS_FILE_PATH = PATH_TO_REPOSITORY + "/sorted_commit_Ids.txt";
-       LINES_FROM_CONSOLE_ON_COMMITS_CHECKOUT = PATH_TO_REPOSITORY + "/linesFromConsoleOnCommitsCheckout.txt";
-       LINES_FROM_CONSOLE_RUNNING_PMD = PATH_TO_REPOSITORY + "/LinesFromConsoleRunningPmd.txt";
-   }
-
-
-
-    static void clone_repository(String repositoryURL) throws IOException, InterruptedException
+    static void cloneRepository(String repository) throws IOException, InterruptedException
     {
-        createPaths();
+        log();
+        FileUtils.deleteDirectory(PATH_TO_REPOSITORY);
+        new File(PATH_TO_REPOSITORY.toString()).mkdir();
+        executeCommandsAndReadLinesFromConsole(new File("."), "git", "clone", "--single-branch", repository, PATH_TO_REPOSITORY.toString());
 
-        Process process = Runtime.getRuntime().exec("git clone " + repositoryURL + " " + PATH_TO_REPOSITORY);
-
-        System.out.println("Trying to clone repository: " + repositoryURL + " into folder " + PATH_TO_REPOSITORY);
-        int returned = process.waitFor();
-
-        if (returned == 0 && PATH_TO_REPOSITORY.isDirectory())
-            System.out.println("Repository " + repositoryURL + " copied successfully");
-        else if (PATH_TO_REPOSITORY.isDirectory())
-            System.out.println("Repository " + repositoryURL + " was not copied, because it already exist.");
-        else
-        {
-            ResultFileWriter.log();
-            System.err.println("ERROR. Repository " + repositoryURL + " was not copied for unknown reason. " + "returned value: " + returned);
-            System.exit(2);
-        }
     }
 
 
 
+    static void retrieveWholeRepoHistory(String repositoryURL) throws IOException, InterruptedException, ParseException {
 
-     static List<String> retrieveCommitsForRepoAndSaveResultsToFile() throws IOException
+        Git.cloneRepository(repositoryURL);
+
+        List<String> linesFromConsole = Git.retrieveCommits();
+
+        LinkedHashMap<String, Calendar> commitIdsWithDates = FileHandler.getAllCommitIdsFromConsoleLines(linesFromConsole);
+        ArrayList<String> commitIds = new ArrayList<String>(commitIdsWithDates.keySet());
+
+//        if(!has1YearOfHistory(commitIdsWithDates))
+//        {
+//            System.err.println("EXIT because repository " + repositoryURL + " does not have 1 year of history.");
+//            System.exit(5);
+//        }
+
+        System.out.println("Creating final result file for each commit");
+        HashMap<String, HashMap<String,ArrayList<String>>> commitIdsWithFileSmells =  createOutputFileForEachCommit(commitIds);
+
+    }
+
+    static ArrayList<String> retrieveCommits() throws IOException, InterruptedException
     {
         removeFileIfPresent(REPOSITORY_HISTORY_FILE_PATH);
-
-        String operatingSystem = System.getProperty("os.name");
-        //System.out.println("Server OS: " + operatingSystem );
-
-        List<String> linesFromConsole = null;
-        if (operatingSystem.contains("Mac") || operatingSystem.contains("Linux"))
-        {
-            //for Mac
-            linesFromConsole = executeCommandsAndReadLinesFromConsole(REPOSITORY_HISTORY_FILE_PATH, "/bin/bash", "-c", "cd " + PATH_TO_REPOSITORY + " && git log --reverse --pretty=format:'%H =%ad='");
-        }
-        else if (operatingSystem.contains("Windows"))
-        {
-            //for Windows
-            linesFromConsole = executeCommandsAndReadLinesFromConsole(REPOSITORY_HISTORY_FILE_PATH, "cmd /c cd " + PATH_TO_REPOSITORY + " && git log --reverse --pretty=format:\"%H =%ad=\" ");
-        }
-        else
-        {
-            ResultFileWriter.log();
-            System.err.println("This program works only on Mac and Windows OS's");
-            System.exit(1);
-        }
-        return linesFromConsole;
+        //log();
+        return executeCommandsAndReadLinesFromConsole(PATH_TO_REPOSITORY, "git", "log", "--reverse", "--pretty=format:%H=%ad=");
     }
 
 
 
-
-     static List<String> executeCommandsAndReadLinesFromConsole(String outputPathToFile, String... command) throws IOException
+    static ArrayList<String> executeCommandsAndReadLinesFromConsole(File dir, String... command) throws IOException, InterruptedException
     {
+        //log();
+        ProcessBuilder processBuilder = new ProcessBuilder(command);
+        processBuilder.redirectError(ProcessBuilder.Redirect.INHERIT);
+        processBuilder.directory(dir);
+        Process process = processBuilder.start();
 
-        //System.out.println("Received command: " + Arrays.toString(command) + " Lines from console will be saved to " + outputPathToFile);
+        ArrayList<String> output = new ArrayList<>();
+
+
+        BufferedReader reader = new BufferedReader(new InputStreamReader(process.getInputStream(), Charset.defaultCharset()));
+
+        try
+        {
+            String line;
+            while ((line = reader.readLine()) != null)
+            {
+                output.add(line);
+                //Util.writeLineToFile(line, Util.ALL_HISTORY_FILE_NAME);
+            }
+        }
+        finally
+        {
+            reader.close();
+
+        }
+
+
+        if (process.waitFor() != 0)
+            throw new IOException("Command " + Arrays.toString(command) + " failed with exit code " + process.exitValue());
+
+
+        return output;
+
+
+    }
+
+
+    static List<String> executeCommandsAndReadLinesFromConsoleOLD(String outputPathToFile, String... command) throws IOException
+    {
         Process process = Runtime.getRuntime().exec(command);
 
         BufferedReader stdInput = new BufferedReader(new
@@ -107,6 +118,7 @@ final class Git
     }
 
 
+
     private static List<String> readCommandOutputAndWriteResultToFileAndReturnLinesFromConsole(BufferedReader stdInput, String outputFilePath) throws IOException
     {
         List<String> linesFromConsole = new ArrayList<>();
@@ -120,45 +132,6 @@ final class Git
         return linesFromConsole;
     }
 
-
-    static Calendar readDateFromLine(String line) throws ParseException, IOException
-    {
-        Pattern pattern = Pattern.compile("=(.*?)=");
-        Matcher matcher = pattern.matcher(line);
-
-        Calendar calendarDate = null;
-
-        if (matcher.find())
-        {
-            String dateStringFromLine = matcher.group(1);
-
-            dateStringFromLine = dateStringFromLine.replaceFirst("....", "");
-            dateStringFromLine = dateStringFromLine.replaceAll(".\\+....$", "");
-            dateStringFromLine = dateStringFromLine.replaceFirst("...", normalizeMonth(dateStringFromLine.substring(0, 3)));
-
-            String year = dateStringFromLine.substring(dateStringFromLine.lastIndexOf(' ') + 1);
-
-            //remove year
-            dateStringFromLine = dateStringFromLine.replaceAll(dateStringFromLine.substring(dateStringFromLine.lastIndexOf(' ') + 1), "");
-
-            //add year at the beginning
-            dateStringFromLine = year.concat(" " + dateStringFromLine);
-
-            SimpleDateFormat sdf = new SimpleDateFormat("yyyy MM dd HH:mm:ss");
-            Date date = sdf.parse(dateStringFromLine);
-
-            calendarDate = Calendar.getInstance();
-            calendarDate.setTime(date);
-        }
-
-        if (calendarDate == null)
-        {
-            ResultFileWriter.log();
-            System.err.print("Error. The calendar date was not created");
-            System.exit(4);
-        }
-        return calendarDate;
-    }
 
 
     static long getNumDaysBtw2Dates(Calendar startDate, Calendar endDate)
@@ -195,6 +168,48 @@ final class Git
         if (month.equalsIgnoreCase("Dec")) month = "12";
 
         return month;
+    }
+
+
+    static Calendar readDateFromLine(String line) throws ParseException, IOException
+    {
+        //Util.log();
+
+        Pattern pattern = Pattern.compile("=(.*?)=");
+        Matcher matcher = pattern.matcher(line);
+
+        Calendar calendarDate = null;
+
+        if (matcher.find())
+        {
+            String dateStringFromLine = matcher.group(1);
+
+            dateStringFromLine = dateStringFromLine.replaceFirst("....", "");
+            dateStringFromLine = dateStringFromLine.replaceAll(".\\+....$", "");
+            dateStringFromLine = dateStringFromLine.replaceFirst("...", normalizeMonth(dateStringFromLine.substring(0, 3)));
+
+            String year = dateStringFromLine.substring(dateStringFromLine.lastIndexOf(' ') + 1);
+
+            //remove year
+            dateStringFromLine = dateStringFromLine.replaceAll(dateStringFromLine.substring(dateStringFromLine.lastIndexOf(' ') + 1), "");
+
+            //add year at the beginning
+            dateStringFromLine = year.concat(" " + dateStringFromLine);
+
+            SimpleDateFormat sdf = new SimpleDateFormat("yyyy MM dd HH:mm:ss");
+            Date date = sdf.parse(dateStringFromLine);
+
+            calendarDate = Calendar.getInstance();
+            calendarDate.setTime(date);
+        }
+
+        if (calendarDate == null)
+        {
+            log();
+            System.err.print("Error. The calendar date was not created");
+            System.exit(4);
+        }
+        return calendarDate;
     }
 
 

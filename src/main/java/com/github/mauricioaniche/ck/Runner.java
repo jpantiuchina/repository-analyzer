@@ -1,12 +1,6 @@
 package com.github.mauricioaniche.ck;
 
 import com.github.mauricioaniche.ck.metric.FileData;
-
-import pipeline.SmellDetector;
-import pipeline.WholePipeline;
-
-import javax.sound.midi.Soundbank;
-import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.PrintStream;
 import java.nio.file.Path;
@@ -14,44 +8,27 @@ import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.HashMap;
 
-import static pipeline.SmellDetector.readSmellsFromFileToHashmap;
-//import java.util.ArrayList;
+import static pipeline.WholePipeline.PATH_TO_REPOSITORY;
 
 public class Runner {
 
-	public static ArrayList<FileData> allFiles = new ArrayList<>();
-
-
-	public static void main(String[] args) throws FileNotFoundException
-	{
-		if(args==null || args.length != 1) {
-			System.out.println("Usage java -jar ck.jar <path to project>");
-			System.exit(1);
-		}
-
-		String path = args[0];
-
-		String csvPath = "output/computed_metrics.csv";
-
-	}
-
-	public static void computeQualityMetrics(String pathToRepository, String pathToQualityMetricsResultFile, HashMap <String, ArrayList<String>> fileNamesWithSmells) throws FileNotFoundException
+	public static void computeQualityMetricsAndSmellsForCommitAndSaveToFile(String pathToQualityMetricsResultFile, HashMap <String, ArrayList<String>> fileNamesWithSmells) throws FileNotFoundException
 	{
 
-		CKReport report = new CK().calculate(pathToRepository);
-
-	//	System.out.println("Path: " + pathToRepository);
+		CKReport report = new CK().calculate(String.valueOf(PATH_TO_REPOSITORY));
 
 		PrintStream ps = new PrintStream(pathToQualityMetricsResultFile);
+
+		try
+		{
 		ps.println("file,isSmelly,IsBlob,isCoupling,IsNPath,CBO,WMC,DIT,NOC,RFC,LCOM,NOM,NOPM,NOSM,NOF,NOPF,NOSF,NOSI,LOC");
 
-		for(CKNumber result : report.all()) {
+		for(CKNumber result : report.all())
+		{
 			if(result.isError()) continue;
 
 			Path pathAbsolute = Paths.get(result.getFile());
-			Path pathBase = Paths.get(pathToRepository).toAbsolutePath();
-			//Path pathRelative = pathBase.relativize(pathAbsolute);
-			//System.err.println(pathRelative);
+
 			String newPath = pathAbsolute.toString();
 
 			FileData classFileData = new FileData(newPath);
@@ -61,13 +38,6 @@ public class Runner {
 
 			if (smells != null)
 			{
-//				System.out.println("===");
-//				System.out.println("fileNameWithSmells: " + fileNamesWithSmells);
-//				System.out.println("newPath: " + newPath);
-//				System.out.println("smells: " + smells);
-//				System.out.println("===");
-//				System.out.println("SMELLS: " + smells +" for file " + newPath);
-//
 
 				for (String smell : smells)
 				{
@@ -83,10 +53,10 @@ public class Runner {
 					{
 						classFileData.setNPath(true);
 					}
-					classFileData.setIsSmelly(true);
+					classFileData.setIsSmelly();
 					//System.err.println("Setting smell " + smell + " to file " + classFileData.getFile());
 				}
-				classFileData.setIsSmelly(true);
+				classFileData.setIsSmelly();
 			}
 
 			classFileData.setCBO (result.getCbo());
@@ -103,8 +73,6 @@ public class Runner {
 			classFileData.setNOSF(result.getNosf());
 			classFileData.setNOSI(result.getNosi());
 			classFileData.setLOC (result.getLoc());
-
-			allFiles.add(classFileData);
 
 			ps.println(
 					classFileData.getFile() + "," +
@@ -128,6 +96,11 @@ public class Runner {
 							result.getLoc()
 			);
 		}
-		ps.close();
+		}
+		finally
+		{
+			ps.close();
+
+		}
 	}
 }

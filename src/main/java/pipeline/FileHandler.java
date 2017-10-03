@@ -369,7 +369,7 @@ class FileHandler
     }
 
 
-    static ArrayList<String> getSmellsForFileInCommit(String fileName, String commitId) throws IOException {
+    private static ArrayList<String> getSmellsForFileInCommit(String fileName, String commitId) throws IOException {
         ArrayList<String> smells = new ArrayList<>();
 
         File inputFile = new File(OUTPUT_FOLDER_NAME + commitId + ".csv");
@@ -397,7 +397,7 @@ class FileHandler
     }
 
 
-    static ArrayList getAllCommitsBetween(String pastCommitId, String currentCommitId, ArrayList<String> allCommits)
+    private static ArrayList getAllCommitsBetween(String pastCommitId, String currentCommitId, ArrayList<String> allCommits)
     {
         ArrayList<String> commitsInBetween = new ArrayList<>();
         int indexPast = allCommits.indexOf(pastCommitId);
@@ -419,7 +419,7 @@ class FileHandler
 
 
 
-    static ArrayList getAllFileNamesInCommit(String commitId) throws IOException
+    private static ArrayList getAllFileNamesInCommit(String commitId) throws IOException
     {
         ArrayList fileNames = new ArrayList();
         File inputFile = new File(OUTPUT_FOLDER_NAME + commitId + ".csv");
@@ -435,39 +435,5 @@ class FileHandler
         br.close();
         return fileNames;
     }
-
-
-    static ArrayList getIntersectionOfFilesInCommits(ArrayList<String> pastFiles, ArrayList<String> currentFiles, ArrayList<String> futureFiles)
-    {
-        ArrayList commonFiles = new ArrayList();
-        for (String pastFile : pastFiles)
-        {
-            for (String currentFile : currentFiles)
-            {
-                for (String futureFile : futureFiles)
-                {
-                    if (pastFile.equals(currentFile) && pastFile.equals(futureFile))
-                    {
-                        commonFiles.add(futureFile);
-                    }
-                }
-            }
-        }
-        return  commonFiles;
-    }
-
-
-    private static List<List<String>> removeEmptyGroups(List<List<String>> groups)
-    {
-        for (int i = groups.size() - 1; i >= 0; i--)
-        {
-            if (groups.get(i).isEmpty())
-            {
-                groups.remove(i);
-            }
-        }
-        return groups;
-    }
-
 
 }

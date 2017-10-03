@@ -33,7 +33,7 @@ public class FileData {
     public void setFile (String file) {this.file = file; }
 
     public boolean getIsSmelly() { return this.isSmelly; }
-    public void setIsSmelly (boolean isSmelly) {this.isSmelly = isSmelly; }
+    public void setIsSmelly () {this.isSmelly = true; }
 
     public boolean getIsBlobClass() { return this.isBlobClass; }
     public void setIsBlobClass (boolean isBlobClass) {this.isBlobClass = isBlobClass; }
