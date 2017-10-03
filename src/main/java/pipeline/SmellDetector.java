@@ -59,7 +59,7 @@ public class SmellDetector
         String operatingSystem = System.getProperty("os.name");
 
         //call pmd for 3 types of smells
-        if (operatingSystem.contains("Mac"))
+        if (operatingSystem.contains("Mac") || operatingSystem.contains("Linux"))
         {
             //for Mac
             Git.executeCommandsAndReadLinesFromConsole(LINES_FROM_CONSOLE_RUNNING_PMD, "/bin/bash", "-c", "pmd-bin-5.8.1/bin/run.sh pmd -d " + PATH_TO_REPOSITORY + " -f csv -R java-design |grep 'God' >" + PATH_TO_RESULT_FILE );
@@ -78,7 +78,7 @@ public class SmellDetector
         else
         {
             ResultFileWriter.log();
-            System.err.println("The program works only on Mac");
+            System.err.println("The program works only on Mac or Linux");
             System.exit(1);
         }
 

@@ -28,8 +28,8 @@ final class Git
 
        REPOSITORY_HISTORY_FILE_PATH = PATH_TO_REPOSITORY + "/linesFromConsole.txt";
        COMMIT_IDS_FILE_PATH = PATH_TO_REPOSITORY + "/sorted_commit_Ids.txt";
-       LINES_FROM_CONSOLE_ON_COMMITS_CHECKOUT = PATH_TO_REPOSITORY + "/LINES_FROM_CONSOLE_ON_COMMITS_CHECKOUT.txt";
-       LINES_FROM_CONSOLE_RUNNING_PMD = PATH_TO_REPOSITORY + "/LINES_FROM_CONSOLE_RUNNING_PMD.txt";
+       LINES_FROM_CONSOLE_ON_COMMITS_CHECKOUT = PATH_TO_REPOSITORY + "/linesFromConsoleOnCommitsCheckout.txt";
+       LINES_FROM_CONSOLE_RUNNING_PMD = PATH_TO_REPOSITORY + "/LinesFromConsoleRunningPmd.txt";
    }
 
 
@@ -37,7 +37,6 @@ final class Git
     static void clone_repository(String repositoryURL) throws IOException, InterruptedException
     {
         createPaths();
-        System.out.println("PPP" +PATH_TO_REPOSITORY);
 
         Process process = Runtime.getRuntime().exec("git clone " + repositoryURL + " " + PATH_TO_REPOSITORY);
 
@@ -64,9 +63,10 @@ final class Git
         removeFileIfPresent(REPOSITORY_HISTORY_FILE_PATH);
 
         String operatingSystem = System.getProperty("os.name");
+        //System.out.println("Server OS: " + operatingSystem );
 
         List<String> linesFromConsole = null;
-        if (operatingSystem.contains("Mac"))
+        if (operatingSystem.contains("Mac") || operatingSystem.contains("Linux"))
         {
             //for Mac
             linesFromConsole = executeCommandsAndReadLinesFromConsole(REPOSITORY_HISTORY_FILE_PATH, "/bin/bash", "-c", "cd " + PATH_TO_REPOSITORY + " && git log --reverse --pretty=format:'%H =%ad='");

@@ -43,6 +43,8 @@ public class WholePipeline
 
         retrieveWholeRepoHistory(repositoryURL);
 
+        System.out.println("History files were successfully created for repository: " + REPO_NAME);
+
 
 
 //        System.out.println(commitIdsWithFileSmells);
