@@ -14,6 +14,7 @@ import java.util.regex.Pattern;
 //import static pipeline.ResultFileWriter.OUTPUT_FOLDER_NAME;
 import static pipeline.ResultFileWriter.removeFileIfPresent;
 import static pipeline.Util.log;
+import static pipeline.Util.writeLineToFile;
 import static pipeline.WholePipeline.*;
 //import static pipeline.WholePipeline.OUTPUT_FOLDER_NAME;
 
@@ -35,28 +36,36 @@ final class Git
 
     static void retrieveWholeRepoHistory(String repositoryURL) throws IOException, InterruptedException, ParseException {
 
-        //Git.cloneRepository(repositoryURL);
+        //if (!PATH_TO_REPOSITORY.exists())
+        //{
+            Git.cloneRepository(repositoryURL);
+        //}
+
 
         List<String> linesFromConsole = Git.retrieveCommits();
+        removeFileIfPresent(REPOSITORY_HISTORY_FILE_PATH);
+        for (String line : linesFromConsole)
+        {
+            writeLineToFile(line,REPOSITORY_HISTORY_FILE_PATH);
+        }
+
 
         LinkedHashMap<String, Calendar> commitIdsWithDates = FileHandler.getAllCommitIdsFromConsoleLines(linesFromConsole);
         ArrayList<String> commitIds = new ArrayList<String>(commitIdsWithDates.keySet());
+        for (String commit : commitIds)
+        {
+            writeLineToFile(commit,COMMIT_IDS_FILE_PATH);
+        }
 
-//        if(!has1YearOfHistory(commitIdsWithDates))
-//        {
-//            System.err.println("EXIT because repository " + repositoryURL + " does not have 1 year of history.");
-//            System.exit(5);
-//        }
 
-        System.out.println("Creating final result file for each commit");
-        HashMap<String, HashMap<String,ArrayList<String>>> commitIdsWithFileSmells =  createOutputFileForEachCommit(commitIds);
+        System.err.println("Creating final result file for each commit");
+        createOutputFileForEachCommit(commitIds);
+
 
     }
 
     static ArrayList<String> retrieveCommits() throws IOException, InterruptedException
-    {
-        removeFileIfPresent(REPOSITORY_HISTORY_FILE_PATH);
-        //log();
+    {//log();
         return executeCommandsAndReadLinesFromConsole(PATH_TO_REPOSITORY, "git", "log", "--reverse", "--pretty=format:%H=%ad=");
     }
 
@@ -91,9 +100,9 @@ final class Git
         }
 
 
-        if (process.waitFor() != 0)
-            throw new IOException("Command " + Arrays.toString(command) + " failed with exit code " + process.exitValue());
-
+//        if (process.waitFor() != 0) //pmd exits with warning and returns -1
+//            throw new IOException("Command " + Arrays.toString(command) + " failed with exit code " + process.exitValue());
+//
 
         return output;
 
@@ -210,6 +219,17 @@ final class Git
             System.exit(4);
         }
         return calendarDate;
+    }
+
+    private static boolean has1YearOfHistory(LinkedHashMap<String, Calendar> commitIdsWithDates)
+    {
+        String firstID = commitIdsWithDates.keySet().iterator().next();
+        Calendar firstCommitDate = commitIdsWithDates.get(firstID);
+        ArrayList<String> commitIds = new ArrayList<String>(commitIdsWithDates.keySet());
+        String lastCommitID = commitIds.get(commitIdsWithDates.size()-1);
+        Calendar lastCommitDate = commitIdsWithDates.get(lastCommitID);
+        // System.out.println("1st commit date: " + firstCommitDate.getTime() + ", last commit date: " + lastCommitDate.getTime() + ", diff: " + getNumDaysBtw2Dates(firstCommitDate, lastCommitDate) );
+        return getNumDaysBtw2Dates(firstCommitDate, lastCommitDate) >= 364;
     }
 
 

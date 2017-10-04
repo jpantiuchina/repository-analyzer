@@ -7,12 +7,17 @@ import java.io.IOException;
 import java.text.ParseException;
 import java.util.*;
 
-import static pipeline.Git.getNumDaysBtw2Dates;
 import static pipeline.Git.retrieveWholeRepoHistory;
 import static pipeline.ResultFileWriter.log;
 import static pipeline.SmellDetector.readSmellsFromFileToHashmap;
 import static pipeline.Util.createPaths;
 import static pipeline.Util.getResultFileNameFromRepositoryURL;
+import static pipeline.Util.writeLineToFile;
+
+
+//TODO createOutputFileForEachCommit not redirected console output to file on commit checkout
+// TODO PMD console output is not redirected to file
+// TODO executeCommandsAndReadLinesFromConsole disabled exception handling, because PMD throws exception with code -1
 
 
 //TODO save output folder for the repository
@@ -28,8 +33,6 @@ import static pipeline.Util.getResultFileNameFromRepositoryURL;
         5) Popularity: at least 10 starts
          */
 
-
-
 public class WholePipeline
 {
 
@@ -38,24 +41,24 @@ public class WholePipeline
     public static File PATH_TO_REPOSITORY;
     static String REPOSITORY_HISTORY_FILE_PATH;
     static String COMMIT_IDS_FILE_PATH;
-    static String LINES_FROM_CONSOLE_ON_COMMITS_CHECKOUT;
-    static String LINES_FROM_CONSOLE_RUNNING_PMD;
+    static String FILE_PATH_TO_LINES_FROM_CONSOLE_ON_COMMITS_CHECKOUT;
+    static String FILE_PATH_TO_LINES_FROM_CONSOLE_RUNNING_PMD;
 
     public static int DAYS;
 
 
     public static void main(String[] args) throws IOException, InterruptedException, ParseException
     {
-
         System.err.println("");
         System.err.println("----------------------------------------------------------------");
         Util.log();
 
-        if (args.length != 2)
+        if (args.length != 1)
         {
             log();
-            System.out.println("Usage arguments: <repository url> <time interval in days> <# of clean classes>");
-            System.out.println("Wrong 3rd [--keep-history] argument");
+            System.out.println("Usage arguments: <repository url>");
+            //System.out.println("Usage arguments: <repository url> <time interval in days> <# of clean classes>");
+          //  System.out.println("Wrong 3rd [--keep-history] argument");
             System.exit(1);
         }
 
@@ -66,79 +69,46 @@ public class WholePipeline
 
         createPaths();
 
-        if (!PATH_TO_REPOSITORY.exists())
-        {
-           Git.cloneRepository(repositoryURL);
-
-        }
-
-
         //Comment if history was already created
         retrieveWholeRepoHistory(repositoryURL);
-
         System.out.println("History files were successfully created for repository: " + REPO_NAME);
 
     }
 
 
 
-
-
-    private static boolean has1YearOfHistory(LinkedHashMap<String, Calendar> commitIdsWithDates)
+    static void createOutputFileForEachCommit(ArrayList<String> commitIds) throws IOException, InterruptedException
     {
-        String firstID = commitIdsWithDates.keySet().iterator().next();
-        Calendar firstCommitDate = commitIdsWithDates.get(firstID);
-        ArrayList<String> commitIds = new ArrayList<String>(commitIdsWithDates.keySet());
-        String lastCommitID = commitIds.get(commitIdsWithDates.size()-1);
-        Calendar lastCommitDate = commitIdsWithDates.get(lastCommitID);
-       // System.out.println("1st commit date: " + firstCommitDate.getTime() + ", last commit date: " + lastCommitDate.getTime() + ", diff: " + getNumDaysBtw2Dates(firstCommitDate, lastCommitDate) );
-        return getNumDaysBtw2Dates(firstCommitDate, lastCommitDate) >= 364;
-    }
-
-
-
-    static HashMap<String, HashMap<String,ArrayList<String>>> createOutputFileForEachCommit(ArrayList<String> commitIds) throws IOException, InterruptedException {
-
-
-        HashMap<String, HashMap<String,ArrayList<String>>> commitIdsWithFileSmells = new HashMap<>();
+        ArrayList<String> linesFromConsoleOnCommitCheckout = new ArrayList<>();
 
         for (String commit : commitIds)
-
         {
-            String pathFinalCommitResultFile = OUTPUT_FOLDER_NAME.concat(commit).concat(".csv");
-            File finalCommitFile = new File(pathFinalCommitResultFile);
-
-            if (!finalCommitFile.exists())
-            {
-                //checkout each commit of the whole repository
-                Git.executeCommandsAndReadLinesFromConsole(
-                        PATH_TO_REPOSITORY, "git", "checkout", "-f", commit);
-            }
-
-
             String pathToFileWithCommitSmells = OUTPUT_FOLDER_NAME.concat(commit).concat("-smells.csv");
+            String pathFinalCommitResultFile = OUTPUT_FOLDER_NAME.concat(commit).concat(".csv");
+
+            File finalCommitFile = new File(pathFinalCommitResultFile);
             File finalCommitFileWithSmells = new File(pathToFileWithCommitSmells);
 
-            //check if file with smells is present, don't runt smell detector
-            if (!finalCommitFileWithSmells.exists())
+            if (!finalCommitFile.exists() && !finalCommitFileWithSmells.exists())
             {
+                //checkout each commit of the whole repository
+                linesFromConsoleOnCommitCheckout.addAll(Git.executeCommandsAndReadLinesFromConsole(
+                        PATH_TO_REPOSITORY, "git", "checkout", "-f", commit));
+
                 //run pmd for each commit
                 SmellDetector.runSmellDetector(pathToFileWithCommitSmells);
+            }
+
+
+            HashMap<String, ArrayList<String>> fileNamesWithSmells = readSmellsFromFileToHashmap(pathToFileWithCommitSmells);
+
+            Runner.computeQualityMetricsAndSmellsForCommitAndSaveToFile(pathFinalCommitResultFile, fileNamesWithSmells);
 
             }
 
-                //add smells to hashmap
-                HashMap<String, ArrayList<String>> fileNamesWithSmells = readSmellsFromFileToHashmap(pathToFileWithCommitSmells);
-
-                Runner.computeQualityMetricsAndSmellsForCommitAndSaveToFile(pathFinalCommitResultFile, fileNamesWithSmells);
-
-                commitIdsWithFileSmells.put(commit, fileNamesWithSmells);
-
-
-            }
-            System.out.println();
-
-        return commitIdsWithFileSmells;
-
+        for (String line: linesFromConsoleOnCommitCheckout)
+        {
+            writeLineToFile(line, FILE_PATH_TO_LINES_FROM_CONSOLE_ON_COMMITS_CHECKOUT);
+        }
     }
 }
