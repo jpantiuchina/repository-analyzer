@@ -12,6 +12,7 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 //import static pipeline.ResultFileWriter.OUTPUT_FOLDER_NAME;
+import static pipeline.FileHandler.createOutputFileForEachCommit;
 import static pipeline.ResultFileWriter.removeFileIfPresent;
 import static pipeline.Util.log;
 import static pipeline.Util.writeLineToFile;
@@ -23,13 +24,13 @@ final class Git
 {
 
 
-    static void cloneRepository(String repository) throws IOException, InterruptedException
+    private static void cloneRepository(String repository) throws IOException, InterruptedException
     {
         log();
         FileUtils.deleteDirectory(PATH_TO_REPOSITORY);
-        new File(PATH_TO_REPOSITORY.toString()).mkdir();
+        boolean mkdir = new File(PATH_TO_REPOSITORY.toString()).mkdir();
+        if (mkdir)
         executeCommandsAndReadLinesFromConsole(new File("."), "git", "clone", "--single-branch", repository, PATH_TO_REPOSITORY.toString());
-
     }
 
 
@@ -51,7 +52,7 @@ final class Git
 
 
         LinkedHashMap<String, Calendar> commitIdsWithDates = FileHandler.getAllCommitIdsFromConsoleLines(linesFromConsole);
-        ArrayList<String> commitIds = new ArrayList<String>(commitIdsWithDates.keySet());
+        ArrayList<String> commitIds = new ArrayList<>(commitIdsWithDates.keySet());
         for (String commit : commitIds)
         {
             writeLineToFile(commit,COMMIT_IDS_FILE_PATH);
@@ -64,7 +65,7 @@ final class Git
 
     }
 
-    static ArrayList<String> retrieveCommits() throws IOException, InterruptedException
+    private static ArrayList<String> retrieveCommits() throws IOException, InterruptedException
     {//log();
         return executeCommandsAndReadLinesFromConsole(PATH_TO_REPOSITORY, "git", "log", "--reverse", "--pretty=format:%H=%ad=");
     }
@@ -82,21 +83,13 @@ final class Git
         ArrayList<String> output = new ArrayList<>();
 
 
-        BufferedReader reader = new BufferedReader(new InputStreamReader(process.getInputStream(), Charset.defaultCharset()));
-
-        try
+        try (BufferedReader reader = new BufferedReader(new InputStreamReader(process.getInputStream(), Charset.defaultCharset())))
         {
             String line;
-            while ((line = reader.readLine()) != null)
-            {
+            while ((line = reader.readLine()) != null) {
                 output.add(line);
                 //Util.writeLineToFile(line, Util.ALL_HISTORY_FILE_NAME);
             }
-        }
-        finally
-        {
-            reader.close();
-
         }
 
 
@@ -110,74 +103,16 @@ final class Git
     }
 
 
-    static List<String> executeCommandsAndReadLinesFromConsoleOLD(String outputPathToFile, String... command) throws IOException
-    {
-        Process process = Runtime.getRuntime().exec(command);
-
-        BufferedReader stdInput = new BufferedReader(new
-                InputStreamReader(process.getInputStream()));
-
-        BufferedReader stdError = new BufferedReader(new
-                InputStreamReader(process.getErrorStream()));
-
-        List<String> linesFromConsole = readCommandOutputAndWriteResultToFileAndReturnLinesFromConsole(stdInput, outputPathToFile);
-        linesFromConsole.addAll(readCommandOutputAndWriteResultToFileAndReturnLinesFromConsole(stdError, outputPathToFile));
-
-        return linesFromConsole;
-    }
-
-
-
-    private static List<String> readCommandOutputAndWriteResultToFileAndReturnLinesFromConsole(BufferedReader stdInput, String outputFilePath) throws IOException
-    {
-        List<String> linesFromConsole = new ArrayList<>();
-        // read the output from the command
-        String command_output;
-        while ((command_output = stdInput.readLine()) != null)
-        {
-            ResultFileWriter.writeLineToFile(command_output, outputFilePath);
-            linesFromConsole.add(command_output);
-        }
-        return linesFromConsole;
-    }
-
 
 
     static long getNumDaysBtw2Dates(Calendar startDate, Calendar endDate)
     {
         Date end = endDate.getTime();
         Date start = startDate.getTime();
-        long diff = 0;
         long timeDiff = Math.abs(start.getTime() - end.getTime());
-        diff = TimeUnit.MILLISECONDS.toDays(timeDiff);
-        return diff;
+        return TimeUnit.MILLISECONDS.toDays(timeDiff);
     }
 
-
-
-    static Calendar getCommitDateAfterNDays(Calendar date, int days) throws ParseException
-    {
-        date.add(Calendar.DATE, days);
-        return date;
-    }
-
-    private static String normalizeMonth(String month)
-    {
-        if (month.equalsIgnoreCase("Jan")) month = "01";
-        if (month.equalsIgnoreCase("Feb")) month = "02";
-        if (month.equalsIgnoreCase("Mar")) month = "03";
-        if (month.equalsIgnoreCase("Apr")) month = "04";
-        if (month.equalsIgnoreCase("May")) month = "05";
-        if (month.equalsIgnoreCase("Jun")) month = "06";
-        if (month.equalsIgnoreCase("Jul")) month = "07";
-        if (month.equalsIgnoreCase("Aug")) month = "08";
-        if (month.equalsIgnoreCase("Sep")) month = "09";
-        if (month.equalsIgnoreCase("Oct")) month = "10";
-        if (month.equalsIgnoreCase("Nov")) month = "11";
-        if (month.equalsIgnoreCase("Dec")) month = "12";
-
-        return month;
-    }
 
 
     static Calendar readDateFromLine(String line) throws ParseException, IOException
@@ -221,17 +156,79 @@ final class Git
         return calendarDate;
     }
 
-    private static boolean has1YearOfHistory(LinkedHashMap<String, Calendar> commitIdsWithDates)
+
+
+
+    private static String normalizeMonth(String month)
     {
-        String firstID = commitIdsWithDates.keySet().iterator().next();
-        Calendar firstCommitDate = commitIdsWithDates.get(firstID);
-        ArrayList<String> commitIds = new ArrayList<String>(commitIdsWithDates.keySet());
-        String lastCommitID = commitIds.get(commitIdsWithDates.size()-1);
-        Calendar lastCommitDate = commitIdsWithDates.get(lastCommitID);
-        // System.out.println("1st commit date: " + firstCommitDate.getTime() + ", last commit date: " + lastCommitDate.getTime() + ", diff: " + getNumDaysBtw2Dates(firstCommitDate, lastCommitDate) );
-        return getNumDaysBtw2Dates(firstCommitDate, lastCommitDate) >= 364;
+        //Util.log();
+
+        if (month.equalsIgnoreCase("Jan")) month = "01";
+        if (month.equalsIgnoreCase("Feb")) month = "02";
+        if (month.equalsIgnoreCase("Mar")) month = "03";
+        if (month.equalsIgnoreCase("Apr")) month = "04";
+        if (month.equalsIgnoreCase("May")) month = "05";
+        if (month.equalsIgnoreCase("Jun")) month = "06";
+        if (month.equalsIgnoreCase("Jul")) month = "07";
+        if (month.equalsIgnoreCase("Aug")) month = "08";
+        if (month.equalsIgnoreCase("Sep")) month = "09";
+        if (month.equalsIgnoreCase("Oct")) month = "10";
+        if (month.equalsIgnoreCase("Nov")) month = "11";
+        if (month.equalsIgnoreCase("Dec")) month = "12";
+
+        return month;
     }
 
+//    private static boolean has1YearOfHistory(LinkedHashMap<String, Calendar> commitIdsWithDates)
+//    {
+//        String firstID = commitIdsWithDates.keySet().iterator().next();
+//        Calendar firstCommitDate = commitIdsWithDates.get(firstID);
+//        ArrayList<String> commitIds = new ArrayList<String>(commitIdsWithDates.keySet());
+//        String lastCommitID = commitIds.get(commitIdsWithDates.size()-1);
+//        Calendar lastCommitDate = commitIdsWithDates.get(lastCommitID);
+//        // System.out.println("1st commit date: " + firstCommitDate.getTime() + ", last commit date: " + lastCommitDate.getTime() + ", diff: " + getNumDaysBtw2Dates(firstCommitDate, lastCommitDate) );
+//        return getNumDaysBtw2Dates(firstCommitDate, lastCommitDate) >= 364;
+//    }
+
+
+
+//    static List<String> executeCommandsAndReadLinesFromConsoleOLD(String outputPathToFile, String... command) throws IOException
+//    {
+//        Process process = Runtime.getRuntime().exec(command);
+//
+//        BufferedReader stdInput = new BufferedReader(new
+//                InputStreamReader(process.getInputStream()));
+//
+//        BufferedReader stdError = new BufferedReader(new
+//                InputStreamReader(process.getErrorStream()));
+//
+//        List<String> linesFromConsole = readCommandOutputAndWriteResultToFileAndReturnLinesFromConsole(stdInput, outputPathToFile);
+//        linesFromConsole.addAll(readCommandOutputAndWriteResultToFileAndReturnLinesFromConsole(stdError, outputPathToFile));
+//
+//        return linesFromConsole;
+//    }
+
+
+
+//    private static List<String> readCommandOutputAndWriteResultToFileAndReturnLinesFromConsole(BufferedReader stdInput, String outputFilePath) throws IOException
+//    {
+//        List<String> linesFromConsole = new ArrayList<>();
+//        // read the output from the command
+//        String command_output;
+//        while ((command_output = stdInput.readLine()) != null)
+//        {
+//            ResultFileWriter.writeLineToFile(command_output, outputFilePath);
+//            linesFromConsole.add(command_output);
+//        }
+//        return linesFromConsole;
+//    }
+
+//    static Calendar getCommitDateAfterNDays(Calendar date, int days) throws ParseException
+//    {
+//        //Util.log();
+//        date.add(Calendar.DATE, days);
+//        return date;
+//    }
 
 }
 

@@ -2,59 +2,63 @@ package pipeline;
 
 import org.apache.commons.math3.stat.correlation.PearsonsCorrelation;
 
-import java.math.RoundingMode;
-import java.text.DecimalFormat;
-
-/**
- *
- */
-
-public class SlopeCalculation
+class SlopeCalculation
 {
 
-    public static double stddevX;
-    public static double stddevY;
-    public static double corr;
-    public static double slope;
+    private static final double ROUND_DECIMAL = 100000d;
 
-    public static double getSlope(double stddevX, double stddevY, double corr)
+    private static double getSlope(double stddevX, double stddevY, double corr)
     {
-        return corr*(stddevY/stddevX);
+        return corr * (stddevY / stddevX);
     }
 
-    public static double getCorrelation(double[] x, double[] y)
+    private static double getCorrelation(double[] x, double[] y)
     {
+        //Util.log();
         return new PearsonsCorrelation().correlation(x, y);
     }
 
 
-    public static double getStandardDeviation(double[] data) {
-        final double mean = getMean(data);
+    private static double getStandardDeviation(double[] data)
+    {
+        //Util.log();
+
+        double mean = getMean(data);
         double sum = 0;
-        for (int i = 0; i < data.length; i++) {
-            sum += Math.pow(Math.abs(mean - data[i]), 2);
+
+        for (double value : data)
+        {
+            sum += Math.pow(Math.abs(mean - value), 2);
         }
+
         return Math.sqrt(sum / data.length);
     }
 
 
-    public static double getMean(double[] data) {
+    private static double getMean(double[] data)
+    {
+        //Util.log();
+
         double sum = 0;
-        for (int i = 0; i < data.length; i++) {
-            sum += data[i];
+
+        for (double aData : data)
+        {
+            sum += aData;
         }
         return sum / data.length;
     }
 
 
-    public static double getSlopeForFileMetric(double[] Xcommits, double[] YmetricValues)
+    static double getSlopeForFileMetric(double[] xCommits, double[] yMetricValues)
     {
-        stddevX = getStandardDeviation(Xcommits);
-        stddevY = getStandardDeviation(YmetricValues);
-        corr = getCorrelation(Xcommits, YmetricValues);
-        slope = getSlope(stddevX,stddevY,corr);
+        //Util.log();
 
-        slope = (double)Math.round(slope * 100000d) / 100000d;
+        double stddevX = getStandardDeviation(xCommits);
+        double stddevY = getStandardDeviation(yMetricValues);
+        double corr    = getCorrelation(xCommits, yMetricValues);
+        double slope   = getSlope(stddevX, stddevY, corr);
+        //round slope
+        slope = (double)Math.round(slope * ROUND_DECIMAL) / ROUND_DECIMAL;
         return slope;
     }
 

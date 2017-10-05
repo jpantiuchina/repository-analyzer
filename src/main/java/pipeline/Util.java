@@ -32,9 +32,6 @@ try-with-resources
 
 
 
-
-
-
     static void log()
     {   //[2] - gets the previous method, hence, the one from which log() i called
         System.err.println("LOG: " + TAG + "." + Thread.currentThread().getStackTrace()[2].getMethodName());
@@ -74,6 +71,37 @@ try-with-resources
 
 
         return (filename);
+    }
+
+    static String createEmptyFinalResultFile(String clonedRepoFolderName) throws IOException
+    {
+        //removes previous result file
+        File result = new File("result");
+        String resultFilePath = ((result.toString()).concat("/").concat(clonedRepoFolderName).concat(".csv"));
+        if (result.mkdir())
+        {
+            System.out.print(result.toString() + " folder created. ");
+        }
+        else
+        {
+            System.out.print(result.toString() + " folder was not created because it already exist. ");
+        }
+
+        System.out.println("Results will be saved (or overwritten) to file " + resultFilePath);
+
+        try (PrintStream ps = new PrintStream(resultFilePath)) {
+            ps.println("fileName, currentCommitId, commitCountFrom1st, numOfDaysFrom1stCommit, removedInCommitCount, " +
+                    "removedInCommitId, RemovedAfterDays, " +
+                    "becameSmellyInCommitCount, becameSmellyInCommitId, becameSmellyAfterDays, " +
+                    "becameBlob, becameCoupling, becameNPath," +
+                    "CBO,      WMC,      DIT,      NOC,      RFC,      LCOM,      NOM,      NOPM,      NOSM,      NOF,      NOPF,      NOSF,      NOSI,      LOC," +
+                    "CBOslopeAllHistory, WMCslopeAllHistory, DITslopeAllHistory, NOCslopeAllHistory, RFCslopeAllHistory, LCOMslopeAllHistory, NOMslopeAllHistory, NOPMslopeAllHistory, NOSMslopeAllHistory, NOFslopeAllHistory, NOPFslopeAllHistory, NOSFslopeAllHistory, NOSIslopeAllHistory, LOCslopeAllHistory, " +
+                    "CBOslope10Recent, WMCslope10Recent, DITslope10Recent, NOCslope10Recent, RFCslope10Recent, LCOMslope10Recent, NOMslope10Recent, NOPMslope10Recent, NOSMslope10Recent, NOFslope10Recent, NOPFslope10Recent, NOSFslope10Recent, NOSIslope10Recent, LOCslope10Recent, " +
+                    "isSmelly,         isBlob,         isCoupling ,         isNPath"
+            );
+        }
+
+        return resultFilePath;
     }
 
 

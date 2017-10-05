@@ -1,9 +1,6 @@
 package pipeline;
 
-import java.io.BufferedReader;
-import java.io.File;
-import java.io.FileReader;
-import java.io.IOException;
+import java.io.*;
 import java.util.*;
 
 import static pipeline.Util.log;
@@ -31,11 +28,9 @@ class SmellDetector
 
 
     //read smells from the file and save to hashmap
-static HashMap <String,ArrayList<String>> readSmellsFromFileToHashmap(String filePath)
-{
+static HashMap <String,ArrayList<String>> readSmellsFromFileToHashmap(String filePath) throws IOException {
     HashMap <String, ArrayList<String>> files = new HashMap<>();
-    try (BufferedReader br = new BufferedReader(new FileReader(filePath)))
-    {
+    try (BufferedReader br = new BufferedReader(new FileReader(filePath))) {
 
         String sCurrentLine;
         String fileName;
@@ -44,20 +39,23 @@ static HashMap <String,ArrayList<String>> readSmellsFromFileToHashmap(String fil
         while ((sCurrentLine = br.readLine()) != null) {
 
             String[] line = sCurrentLine.split("(?<=\"),(?=\")");
-            fileName = line[2].replace("\"","");
-            smellType = line[7].replace("\"","");
+            fileName = line[2].replace("\"", "");
+            smellType = line[7].replace("\"", "");
 
             ArrayList<String> smells = files.computeIfAbsent(fileName, k -> new ArrayList<>());
             //if filename is not present in the hashmap
 
             //add smellType only if it is not present
             if (!smells.contains(smellType))
-            smells.add(smellType);
+                smells.add(smellType);
         }
 
     } catch (IOException e) {
         e.printStackTrace();
     }
+
+
+
     return files;
 }
 

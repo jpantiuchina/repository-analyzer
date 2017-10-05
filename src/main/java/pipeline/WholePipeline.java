@@ -1,18 +1,13 @@
 package pipeline;
 
-import com.github.mauricioaniche.ck.Runner;
-
 import java.io.File;
 import java.io.IOException;
 import java.text.ParseException;
-import java.util.*;
 
 import static pipeline.Git.retrieveWholeRepoHistory;
 import static pipeline.ResultFileWriter.log;
-import static pipeline.SmellDetector.readSmellsFromFileToHashmap;
 import static pipeline.Util.createPaths;
 import static pipeline.Util.getResultFileNameFromRepositoryURL;
-import static pipeline.Util.writeLineToFile;
 
 
 //TODO createOutputFileForEachCommit not redirected console output to file on commit checkout
@@ -41,8 +36,8 @@ public class WholePipeline
     public static File PATH_TO_REPOSITORY;
     static String REPOSITORY_HISTORY_FILE_PATH;
     static String COMMIT_IDS_FILE_PATH;
-    static String FILE_PATH_TO_LINES_FROM_CONSOLE_ON_COMMITS_CHECKOUT;
-    static String FILE_PATH_TO_LINES_FROM_CONSOLE_RUNNING_PMD;
+    static String FILE_PATH_TO_LINES_FROM_CONSOLE_ON_COMMITS_CHECKOUT; //not produced TODO
+    static String FILE_PATH_TO_LINES_FROM_CONSOLE_RUNNING_PMD; //not produced TODO
 
     public static int DAYS;
 
@@ -73,42 +68,15 @@ public class WholePipeline
         retrieveWholeRepoHistory(repositoryURL);
         System.out.println("History files were successfully created for repository: " + REPO_NAME);
 
+        //         OUTPUT_FOLDER_NAME contains result files for every commit
+       // COMMIT_IDS_FILE_PATH  contains commit ids sorted
+        // REPOSITORY_HISTORY_FILE_PATH (git log with dates)
+
+
+
     }
 
 
 
-    static void createOutputFileForEachCommit(ArrayList<String> commitIds) throws IOException, InterruptedException
-    {
-        ArrayList<String> linesFromConsoleOnCommitCheckout = new ArrayList<>();
 
-        for (String commit : commitIds)
-        {
-            String pathToFileWithCommitSmells = OUTPUT_FOLDER_NAME.concat(commit).concat("-smells.csv");
-            String pathFinalCommitResultFile = OUTPUT_FOLDER_NAME.concat(commit).concat(".csv");
-
-            File finalCommitFile = new File(pathFinalCommitResultFile);
-            File finalCommitFileWithSmells = new File(pathToFileWithCommitSmells);
-
-            if (!finalCommitFile.exists() && !finalCommitFileWithSmells.exists())
-            {
-                //checkout each commit of the whole repository
-                linesFromConsoleOnCommitCheckout.addAll(Git.executeCommandsAndReadLinesFromConsole(
-                        PATH_TO_REPOSITORY, "git", "checkout", "-f", commit));
-
-                //run pmd for each commit
-                SmellDetector.runSmellDetector(pathToFileWithCommitSmells);
-            }
-
-
-            HashMap<String, ArrayList<String>> fileNamesWithSmells = readSmellsFromFileToHashmap(pathToFileWithCommitSmells);
-
-            Runner.computeQualityMetricsAndSmellsForCommitAndSaveToFile(pathFinalCommitResultFile, fileNamesWithSmells);
-
-            }
-
-        for (String line: linesFromConsoleOnCommitCheckout)
-        {
-            writeLineToFile(line, FILE_PATH_TO_LINES_FROM_CONSOLE_ON_COMMITS_CHECKOUT);
-        }
-    }
 }

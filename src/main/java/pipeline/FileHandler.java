@@ -1,5 +1,7 @@
 package pipeline;
 
+import com.github.mauricioaniche.ck.Runner;
+
 import java.io.*;
 import java.text.ParseException;
 import java.util.*;
@@ -9,8 +11,9 @@ import static pipeline.Git.getNumDaysBtw2Dates;
 import static pipeline.Git.readDateFromLine;
 import static pipeline.ResultFileWriter.*;
 import static pipeline.SlopeCalculation.getSlopeForFileMetric;
-import static pipeline.WholePipeline.COMMIT_IDS_FILE_PATH;
-import static pipeline.WholePipeline.OUTPUT_FOLDER_NAME;
+import static pipeline.SmellDetector.readSmellsFromFileToHashmap;
+import static pipeline.Util.writeLineToFile;
+import static pipeline.WholePipeline.*;
 //import static pipeline.WholePipeline.OUTPUT_FOLDER_NAME;
 
 
@@ -165,36 +168,7 @@ class FileHandler
 
 
 
-    static String createEmptyFinalResultFile(String clonedRepoFolderName) throws IOException
-    {
-        //removes previous result file
-        File result = new File("result");
-        String resultFilePath = ((result.toString()).concat("/").concat(clonedRepoFolderName).concat(".csv"));
-        if (result.mkdir())
-        {
-            System.out.print(result.toString() + " folder created. ");
-        }
-        else
-        {
-            System.out.print(result.toString() + " folder was not created because it already exist. ");
-        }
 
-        System.out.println("Results will be saved (or overwritten) to file " + resultFilePath);
-
-        PrintStream ps = new PrintStream(resultFilePath);//TODO
-        ps.println("fileName, currentCommitId, commitCountFrom1st, numOfDaysFrom1stCommit, removedInCommitCount, " +
-                "removedInCommitId, RemovedAfterDays, " +
-                "becameSmellyInCommitCount, becameSmellyInCommitId, becameSmellyAfterDays, " +
-                "becameBlob, becameCoupling, becameNPath," +
-                "CBO,      WMC,      DIT,      NOC,      RFC,      LCOM,      NOM,      NOPM,      NOSM,      NOF,      NOPF,      NOSF,      NOSI,      LOC," +
-                "CBOslopeAllHistory, WMCslopeAllHistory, DITslopeAllHistory, NOCslopeAllHistory, RFCslopeAllHistory, LCOMslopeAllHistory, NOMslopeAllHistory, NOPMslopeAllHistory, NOSMslopeAllHistory, NOFslopeAllHistory, NOPFslopeAllHistory, NOSFslopeAllHistory, NOSIslopeAllHistory, LOCslopeAllHistory, " +
-                "CBOslope10Recent, WMCslope10Recent, DITslope10Recent, NOCslope10Recent, RFCslope10Recent, LCOMslope10Recent, NOMslope10Recent, NOPMslope10Recent, NOSMslope10Recent, NOFslope10Recent, NOPFslope10Recent, NOSFslope10Recent, NOSIslope10Recent, LOCslope10Recent, " +
-                "isSmelly,         isBlob,         isCoupling ,         isNPath"
-        );
-        ps.close();
-
-        return resultFilePath;
-    }
 
 
     static void addFinalFileData(String fileName, String currentCommitId, int commitCount, long numOfDaysFrom1stCommit, int removedInCommitCount,
@@ -293,12 +267,12 @@ class FileHandler
 
 
 
-
     static ArrayList<Double> getSlopeForAllFileMetrics(ArrayList<ArrayList<Double>> metrics)
     {
+        //Util.log();
+
         ArrayList<Double> slopes = new ArrayList<>();
         int xInterval = metrics.size();
-
         double[] xValues = new double[xInterval];
 
         for (int i = 0; i < xInterval; i++)
@@ -306,91 +280,142 @@ class FileHandler
             xValues[i] = ((double) i);
         }
 
-            for (int j = 0; j < 14; j++) // 14 = metrics.get(commit).size()
+        for (int j = 0; j < metrics.get(0).size(); j++) // 14 = metrics.get(commit).size()
+        {
+            double[] yValues = new double[xInterval]; //yValues will be created for each metric
+
+            for (int k = 0; k < metrics.size(); k++) //for each commit
             {
-                double[] yValues = new double[xInterval]; //yValues will be created for each metric
-
-                for (int k = 0; k < metrics.size(); k++) //for each commit
-                {
-                    yValues[k] = (metrics.get(k).get(j)); //ad metric value to arraylist
-                }
-
-                slopes.add(getSlopeForFileMetric(xValues, yValues));
-
-                System.out.println(slopes);
+                yValues[k] = (metrics.get(k).get(j)); //ad metric value to arraylist
             }
+            slopes.add(getSlopeForFileMetric(xValues, yValues));
+        }
         return slopes;
     }
 
+
+    static boolean isFilePresentInCommit (String fileName, String commitId) throws IOException
+    {
+        File inputFile = new File(OUTPUT_FOLDER_NAME + commitId + ".csv");
+
+        BufferedReader br = new BufferedReader(new FileReader(inputFile));
+
+        try
+        {
+            String line; //= br.readLine();
+            while ((line = br.readLine()) != null) {
+                String[] cols = line.split(","); // use comma as separator
+                if (cols[0].equals(fileName)) //found line with searched filename
+                {
+                    return true;
+                }
+            }
+        }
+        finally
+        {
+            br.close();
+        }
+
+        return false;
+    }
+
+
+
+
     static ArrayList<ArrayList<Double>> getQualityMetricsForFileInCommits(String fileName, ArrayList<String> commits) throws IOException
     {
-        //stores commitId as a key, ArrayList of metric values
+        //Util.log();
+
         ArrayList<ArrayList<Double>> metricsForFile = new ArrayList<>();
 
-
-        System.out.println("CommitSize: " + commits.size());
-        for (int i = 0; i < commits.size(); i++)
+        for (String commitId : commits)
         {
-            String commitId = commits.get(i);
-            System.out.println("CommitId: " + commitId);
-            metricsForFile.add(getQualityMetricsForFileInCommit(fileName, commitId)); //add all metrics for fileName to hashmap
+            // check if file is present in commit (because it may be deleted and then restored again)
+            if (isFilePresentInCommit(fileName,commitId))
+            {
+                metricsForFile.add(getQualityMetricsForFileInCommit(fileName, commitId)); //add all metrics for fileName to ArrayList
+            }
+        }
+
+        if (metricsForFile.size() == 0)
+        {
+            log();
+            System.err.println("Error. metricsForFile = 0");
+            System.exit(3);
         }
 
         return metricsForFile;
     }
 
-    static ArrayList<Double> getQualityMetricsForFileInCommit(String fileName, String commitId) throws IOException
+
+    private static ArrayList<Double> getQualityMetricsForFileInCommit(String fileName, String commitId) throws IOException
     {
         ArrayList<Double> metrics = new ArrayList<>();
 
         File inputFile = new File(OUTPUT_FOLDER_NAME + commitId + ".csv");
-        BufferedReader br = new BufferedReader(new FileReader(inputFile));
 
-        String line = br.readLine();
-        while ((line = br.readLine()) != null) {
-            String[] cols = line.split(","); // use comma as separator
-            if (cols[0].equals(fileName)) //found line with searched filename
-            {
-               // System.out.println(cols[0] + " FILENAME: " + fileName + " ARE EQUAL? " + cols[0].equals(fileName));
+        try (BufferedReader br = new BufferedReader(new FileReader(inputFile))) {
 
-                int i = 5; //quality metrics in csv file start from column 5
-                //System.out.println(cols.length);
-                while ( i < cols.length)
+            String line = br.readLine();
+
+            while ((line = br.readLine()) != null) {
+                String[] cols = line.split(","); // use comma as separator
+                if (cols[0].equals(fileName)) //found line with searched filename
                 {
-                    //System.out.println(cols[i]);
-                    metrics.add(Double.parseDouble(cols[i]));
-                    i++;
+                    // System.out.println(cols[0] + " FILENAME: " + fileName + " ARE EQUAL? " + cols[0].equals(fileName));
+
+                    int i = 5; //quality metrics in csv file start from column 5
+                    //System.out.println(cols.length);
+                    while (i < cols.length) {
+                        //System.out.println(cols[i]);
+                        metrics.add(Double.parseDouble(cols[i]));
+                        i++;
+                    }
                 }
             }
         }
-        System.out.println("getQualityMetricsForFileInCommit filename: " + fileName + " commitId " + commitId +  " metrics: " + metrics) ;
+        //
+        if (metrics.size() == 0)
+        {
+            log();
+            System.err.println("ERROR. For file " + fileName + " and commit ID " + commitId + " metrics = 0");
+        }
+
         return metrics;
 
     }
 
 
-    private static ArrayList<String> getSmellsForFileInCommit(String fileName, String commitId) throws IOException {
+    private static ArrayList<String> getSmellsForFileInCommit(String fileName, String commitId) throws IOException
+    {
         ArrayList<String> smells = new ArrayList<>();
-
         File inputFile = new File(OUTPUT_FOLDER_NAME + commitId + ".csv");
         BufferedReader br = new BufferedReader(new FileReader(inputFile));
 
         String line = br.readLine();
-        while ((line = br.readLine()) != null) {
-            String[] cols = line.split(","); // use comma as separator
-            if (cols[0].equals(fileName)) //found line with searched filename
+        try
+        {
+            while ((line = br.readLine()) != null)
             {
+                String[] cols = line.split(","); // use comma as separator
+                if (cols[0].equals(fileName)) //found line with searched filename
+                {
                 // System.out.println(cols[0] + " FILENAME: " + fileName + " ARE EQUAL? " + cols[0].equals(fileName));
 
-                int i = 1; //smells 1-4
-                //System.out.println(cols.length);
-                while ( i < 5) //end of smells column
-                {
-                    //System.out.println(cols[i]);
-                    smells.add((cols[i]));
-                    i++;
+                    int i = 1; //smells 1-4
+                    //System.out.println(cols.length);
+                    while ( i < 5) //end of smells column
+                    {
+                        //System.out.println(cols[i]);
+                        smells.add((cols[i]));
+                        i++;
+                    }
                 }
             }
+        }
+        finally
+        {
+            br.close();
         }
         return smells;
 
@@ -412,8 +437,6 @@ class FileHandler
                 commitsInBetween.add(allCommits.get(i));
             }
         }
-
-        System.out.println("Commits betweem: " + pastCommitId + " and " + currentCommitId + " : " + commitsInBetween);
         return commitsInBetween;
     }
 
@@ -423,17 +446,61 @@ class FileHandler
     {
         ArrayList fileNames = new ArrayList();
         File inputFile = new File(OUTPUT_FOLDER_NAME + commitId + ".csv");
-        BufferedReader br = new BufferedReader(new FileReader(inputFile));
 
-        String line = br.readLine();
-        while ((line = br.readLine()) != null) {
-            String[] cols = line.split(",");
-            // use comma as separator
-            fileNames.add(cols[0]);
-            //System.err.println("FILENAME: " + cols[0]);
+        try (BufferedReader br = new BufferedReader(new FileReader(inputFile))) {
+            br.readLine();
+            String line;
+            while ((line = br.readLine()) != null) {
+                String[] cols = line.split(",");  // use comma as separator
+                boolean added = fileNames.add(cols[0]);
+                if (!added)
+                {
+                    log();
+                    System.out.println("Error adding the file");
+                    System.exit(4);
+                }
+            }
         }
-        br.close();
         return fileNames;
     }
+
+
+    static void createOutputFileForEachCommit(ArrayList<String> commitIds) throws IOException, InterruptedException
+    {
+        ArrayList<String> linesFromConsoleOnCommitCheckout = new ArrayList<>();
+
+        for (String commit : commitIds)
+        {
+            String pathToFileWithCommitSmells = OUTPUT_FOLDER_NAME.concat(commit).concat("-smells.csv");
+            String pathFinalCommitResultFile = OUTPUT_FOLDER_NAME.concat(commit).concat(".csv");
+
+            File finalCommitFile = new File(pathFinalCommitResultFile);
+            File finalCommitFileWithSmells = new File(pathToFileWithCommitSmells);
+
+            if (!finalCommitFile.exists() && !finalCommitFileWithSmells.exists())
+            {
+                //checkout each commit of the whole repository
+                linesFromConsoleOnCommitCheckout.addAll(Git.executeCommandsAndReadLinesFromConsole(
+                        PATH_TO_REPOSITORY, "git", "checkout", "-f", commit));
+
+                //run pmd for each commit
+                SmellDetector.runSmellDetector(pathToFileWithCommitSmells);
+            }
+
+
+            HashMap<String, ArrayList<String>> fileNamesWithSmells = readSmellsFromFileToHashmap(pathToFileWithCommitSmells);
+
+            Runner.computeQualityMetricsAndSmellsForCommitAndSaveToFile(pathFinalCommitResultFile, fileNamesWithSmells);
+
+        }
+
+        for (String line: linesFromConsoleOnCommitCheckout)
+        {
+            writeLineToFile(line, FILE_PATH_TO_LINES_FROM_CONSOLE_ON_COMMITS_CHECKOUT);
+        }
+    }
+
+
+
 
 }
