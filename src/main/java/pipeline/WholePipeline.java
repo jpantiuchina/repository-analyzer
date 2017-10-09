@@ -3,7 +3,11 @@ package pipeline;
 import java.io.File;
 import java.io.IOException;
 import java.text.ParseException;
+import java.util.ArrayList;
+import java.util.Calendar;
+import java.util.LinkedHashMap;
 
+import static pipeline.FileHandler.handleFilesInCommits;
 import static pipeline.Git.retrieveWholeRepoHistory;
 import static pipeline.ResultFileWriter.log;
 import static pipeline.Util.createPaths;
@@ -39,6 +43,15 @@ public class WholePipeline
     static String FILE_PATH_TO_LINES_FROM_CONSOLE_ON_COMMITS_CHECKOUT; //not produced TODO
     static String FILE_PATH_TO_LINES_FROM_CONSOLE_RUNNING_PMD; //not produced TODO
 
+    static String PATH_TO_SMELLY_FINAL_RESULT_FILE;
+    static String PATH_TO_CLEAN_FINAL_RESULT_FILE;
+
+
+    static ArrayList<String> COMMIT_IDS = new ArrayList<>();
+    static LinkedHashMap<String, Calendar> COMMIT_IDS_WITH_DATES = new LinkedHashMap<>();
+    static ArrayList<String> SMELLY_FILE_NAMES = new ArrayList<>();
+
+
     public static int DAYS;
 
 
@@ -59,7 +72,7 @@ public class WholePipeline
 
         String repositoryURL = args[0].trim();
         //DAYS = Integer.parseInt(args[1]);
-        System.out.println("URL: " + repositoryURL);
+       // System.out.println("URL: " + repositoryURL);
         REPO_NAME = getResultFileNameFromRepositoryURL(repositoryURL);
 
         createPaths();
@@ -72,6 +85,11 @@ public class WholePipeline
        // COMMIT_IDS_FILE_PATH  contains commit ids sorted
         // REPOSITORY_HISTORY_FILE_PATH (git log with dates)
 
+
+
+
+
+       handleFilesInCommits();
 
 
     }

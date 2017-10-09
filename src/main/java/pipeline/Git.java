@@ -24,12 +24,13 @@ final class Git
 {
 
 
+    @SuppressWarnings("ResultOfMethodCallIgnored")
     private static void cloneRepository(String repository) throws IOException, InterruptedException
     {
         log();
         FileUtils.deleteDirectory(PATH_TO_REPOSITORY);
-        boolean mkdir = new File(PATH_TO_REPOSITORY.toString()).mkdir();
-        if (mkdir)
+        new File(PATH_TO_REPOSITORY.toString()).mkdir();
+
         executeCommandsAndReadLinesFromConsole(new File("."), "git", "clone", "--single-branch", repository, PATH_TO_REPOSITORY.toString());
     }
 
@@ -37,10 +38,10 @@ final class Git
 
     static void retrieveWholeRepoHistory(String repositoryURL) throws IOException, InterruptedException, ParseException {
 
-        //if (!PATH_TO_REPOSITORY.exists())
-        //{
+        if (!PATH_TO_REPOSITORY.exists())
+        {
             Git.cloneRepository(repositoryURL);
-        //}
+        }
 
 
         List<String> linesFromConsole = Git.retrieveCommits();
@@ -51,17 +52,18 @@ final class Git
         }
 
 
-        LinkedHashMap<String, Calendar> commitIdsWithDates = FileHandler.getAllCommitIdsFromConsoleLines(linesFromConsole);
-        ArrayList<String> commitIds = new ArrayList<>(commitIdsWithDates.keySet());
+        COMMIT_IDS_WITH_DATES = FileHandler.getAllCommitIdsFromConsoleLines(linesFromConsole);
+        ArrayList<String> commitIds = new ArrayList<>(COMMIT_IDS_WITH_DATES.keySet());
+        removeFileIfPresent(COMMIT_IDS_FILE_PATH);
         for (String commit : commitIds)
         {
             writeLineToFile(commit,COMMIT_IDS_FILE_PATH);
+            COMMIT_IDS.add(commit);
         }
 
 
         System.err.println("Creating final result file for each commit");
         createOutputFileForEachCommit(commitIds);
-
 
     }
 
@@ -81,7 +83,6 @@ final class Git
         Process process = processBuilder.start();
 
         ArrayList<String> output = new ArrayList<>();
-
 
         try (BufferedReader reader = new BufferedReader(new InputStreamReader(process.getInputStream(), Charset.defaultCharset())))
         {

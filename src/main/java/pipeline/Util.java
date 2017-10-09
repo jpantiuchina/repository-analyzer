@@ -12,6 +12,7 @@ import static pipeline.WholePipeline.FILE_PATH_TO_LINES_FROM_CONSOLE_RUNNING_PMD
 import static pipeline.WholePipeline.PATH_TO_REPOSITORY;
 
 
+
 class Util
 {
 
@@ -73,11 +74,11 @@ try-with-resources
         return (filename);
     }
 
-    static String createEmptyFinalResultFile(String clonedRepoFolderName) throws IOException
+    static void createEmptyFinalResultFiles() throws IOException
     {
         //removes previous result file
         File result = new File("result");
-        String resultFilePath = ((result.toString()).concat("/").concat(clonedRepoFolderName).concat(".csv"));
+
         if (result.mkdir())
         {
             System.out.print(result.toString() + " folder created. ");
@@ -87,21 +88,34 @@ try-with-resources
             System.out.print(result.toString() + " folder was not created because it already exist. ");
         }
 
-        System.out.println("Results will be saved (or overwritten) to file " + resultFilePath);
+        PATH_TO_SMELLY_FINAL_RESULT_FILE = ((result.toString()).concat("/").concat(REPO_NAME).concat("-smelly").concat(".csv"));
+        PATH_TO_CLEAN_FINAL_RESULT_FILE = ((result.toString()).concat("/").concat(REPO_NAME).concat("-clean").concat(".csv"));
 
-        try (PrintStream ps = new PrintStream(resultFilePath)) {
-            ps.println("fileName, currentCommitId, commitCountFrom1st, numOfDaysFrom1stCommit, removedInCommitCount, " +
-                    "removedInCommitId, RemovedAfterDays, " +
-                    "becameSmellyInCommitCount, becameSmellyInCommitId, becameSmellyAfterDays, " +
-                    "becameBlob, becameCoupling, becameNPath," +
+
+        System.out.println("Results will be saved (or overwritten) to file " + PATH_TO_SMELLY_FINAL_RESULT_FILE);
+
+        try (PrintStream ps = new PrintStream(PATH_TO_SMELLY_FINAL_RESULT_FILE)) {
+            ps.println("fileName, currentCommitId, currentCommitCount, currentNumOfDaysFromFirst, " + //for smelly
+                    "addedInCommitId, addedInCommitCount, addedAfterDaysFromFirst," +
                     "CBO,      WMC,      DIT,      NOC,      RFC,      LCOM,      NOM,      NOPM,      NOSM,      NOF,      NOPF,      NOSF,      NOSI,      LOC," +
                     "CBOslopeAllHistory, WMCslopeAllHistory, DITslopeAllHistory, NOCslopeAllHistory, RFCslopeAllHistory, LCOMslopeAllHistory, NOMslopeAllHistory, NOPMslopeAllHistory, NOSMslopeAllHistory, NOFslopeAllHistory, NOPFslopeAllHistory, NOSFslopeAllHistory, NOSIslopeAllHistory, LOCslopeAllHistory, " +
-                    "CBOslope10Recent, WMCslope10Recent, DITslope10Recent, NOCslope10Recent, RFCslope10Recent, LCOMslope10Recent, NOMslope10Recent, NOPMslope10Recent, NOSMslope10Recent, NOFslope10Recent, NOPFslope10Recent, NOSFslope10Recent, NOSIslope10Recent, LOCslope10Recent, " +
-                    "isSmelly,         isBlob,         isCoupling ,         isNPath"
+                    "isBlob, isCoupling, isNPath, countFromAddedToCurrent, numberOfDaysFromAddedToCurrent"
+
+
             );
         }
 
-        return resultFilePath;
+        System.out.println("Results will be saved (or overwritten) to file " + PATH_TO_CLEAN_FINAL_RESULT_FILE);
+
+        try (PrintStream ps = new PrintStream(PATH_TO_CLEAN_FINAL_RESULT_FILE)) {
+            ps.println("fileName, currentCommitId, currentCommitCount, currentNumOfDaysFromFirst, " +
+                    "addedInCommitId, addedInCommitCount, addedAfterDaysFromFirst," +
+                    "CBO,      WMC,      DIT,      NOC,      RFC,      LCOM,      NOM,      NOPM,      NOSM,      NOF,      NOPF,      NOSF,      NOSI,      LOC," +
+                    "CBOslopeAllHistory, WMCslopeAllHistory, DITslopeAllHistory, NOCslopeAllHistory, RFCslopeAllHistory, LCOMslopeAllHistory, NOMslopeAllHistory, NOPMslopeAllHistory, NOSMslopeAllHistory, NOFslopeAllHistory, NOPFslopeAllHistory, NOSFslopeAllHistory, NOSIslopeAllHistory, LOCslopeAllHistory, "+
+                    "countFromAddedToCurrent, numberOfDaysFromAddedToCurrent"
+            );
+        }
+
     }
 
 
