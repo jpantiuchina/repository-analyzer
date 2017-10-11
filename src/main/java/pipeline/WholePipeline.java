@@ -8,6 +8,8 @@ import java.util.Calendar;
 import java.util.LinkedHashMap;
 
 import static pipeline.FileHandler.handleFilesInCommits;
+import static pipeline.Git.getNumDaysBtw2Dates;
+import static pipeline.Git.readDateFromLine;
 import static pipeline.Git.retrieveWholeRepoHistory;
 import static pipeline.ResultFileWriter.log;
 import static pipeline.Util.createPaths;
@@ -61,6 +63,7 @@ public class WholePipeline
         System.err.println("----------------------------------------------------------------");
         Util.log();
 
+        
         if (args.length != 1)
         {
             log();

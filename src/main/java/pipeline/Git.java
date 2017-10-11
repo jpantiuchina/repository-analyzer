@@ -94,10 +94,6 @@ final class Git
         }
 
 
-//        if (process.waitFor() != 0) //pmd exits with warning and returns -1
-//            throw new IOException("Command " + Arrays.toString(command) + " failed with exit code " + process.exitValue());
-//
-
         return output;
 
 
@@ -110,7 +106,7 @@ final class Git
     {
         Date end = endDate.getTime();
         Date start = startDate.getTime();
-        long timeDiff = Math.abs(start.getTime() - end.getTime());
+        long timeDiff = Math.abs(end.getTime() - start.getTime());
         return TimeUnit.MILLISECONDS.toDays(timeDiff);
     }
 
@@ -131,6 +127,7 @@ final class Git
 
             dateStringFromLine = dateStringFromLine.replaceFirst("....", "");
             dateStringFromLine = dateStringFromLine.replaceAll(".\\+....$", "");
+            dateStringFromLine = dateStringFromLine.replaceAll(".\\-....$", "");
             dateStringFromLine = dateStringFromLine.replaceFirst("...", normalizeMonth(dateStringFromLine.substring(0, 3)));
 
             String year = dateStringFromLine.substring(dateStringFromLine.lastIndexOf(' ') + 1);
@@ -193,43 +190,8 @@ final class Git
 
 
 
-//    static List<String> executeCommandsAndReadLinesFromConsoleOLD(String outputPathToFile, String... command) throws IOException
-//    {
-//        Process process = Runtime.getRuntime().exec(command);
-//
-//        BufferedReader stdInput = new BufferedReader(new
-//                InputStreamReader(process.getInputStream()));
-//
-//        BufferedReader stdError = new BufferedReader(new
-//                InputStreamReader(process.getErrorStream()));
-//
-//        List<String> linesFromConsole = readCommandOutputAndWriteResultToFileAndReturnLinesFromConsole(stdInput, outputPathToFile);
-//        linesFromConsole.addAll(readCommandOutputAndWriteResultToFileAndReturnLinesFromConsole(stdError, outputPathToFile));
-//
-//        return linesFromConsole;
-//    }
 
 
-
-//    private static List<String> readCommandOutputAndWriteResultToFileAndReturnLinesFromConsole(BufferedReader stdInput, String outputFilePath) throws IOException
-//    {
-//        List<String> linesFromConsole = new ArrayList<>();
-//        // read the output from the command
-//        String command_output;
-//        while ((command_output = stdInput.readLine()) != null)
-//        {
-//            ResultFileWriter.writeLineToFile(command_output, outputFilePath);
-//            linesFromConsole.add(command_output);
-//        }
-//        return linesFromConsole;
-//    }
-
-//    static Calendar getCommitDateAfterNDays(Calendar date, int days) throws ParseException
-//    {
-//        //Util.log();
-//        date.add(Calendar.DATE, days);
-//        return date;
-//    }
 
 }
 
