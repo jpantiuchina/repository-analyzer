@@ -4,7 +4,7 @@
   <groupId>com.github.mauricioaniche</groupId>
   <artifactId>ck</artifactId>
   <name>CK metrics calculator</name>
-  <version>1.0-retrieve-history</version>
+  <version>1.0-postProcessing</version>
   <description>CK metrics</description>
   <url>http://www.mauricioaniche.com/ck</url>
   <developers>

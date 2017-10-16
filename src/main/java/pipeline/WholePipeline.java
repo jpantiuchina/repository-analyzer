@@ -7,6 +7,7 @@ import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.LinkedHashMap;
 
+import static pipeline.FileHandler.createFinalFileDataLine;
 import static pipeline.FileHandler.handleFilesInCommits;
 import static pipeline.Git.getNumDaysBtw2Dates;
 import static pipeline.Git.readDateFromLine;
@@ -63,7 +64,7 @@ public class WholePipeline
         System.err.println("----------------------------------------------------------------");
         Util.log();
 
-        
+
         if (args.length != 1)
         {
             log();
@@ -89,8 +90,8 @@ public class WholePipeline
         // REPOSITORY_HISTORY_FILE_PATH (git log with dates)
 
 
-
-
+        String line = createFinalFileDataLine("/Users/jevgenijapantiuchina/Desktop/smell-prediction/repository-analyzer/history/output-java/java/src/main/java/com/jsoniter/output/CodegenImplNative.java","b40fd4ff266525bd3113520bea2ca595781dfb28",true);
+        System.out.println(line);
 
        handleFilesInCommits();
 
