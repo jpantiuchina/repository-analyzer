@@ -171,6 +171,17 @@ class FileHandler
         {
             //get CommitId before interval / Metrics commit ID
             String metricsCommitId = getCommitIDBeforeNDays(futureCommitId, interval);
+            while (!isFilePresentInCommit(fileName, metricsCommitId) && interval > 2)
+            {
+                interval--;
+                metricsCommitId = getCommitIDBeforeNDays(futureCommitId, interval);
+            }
+            if (interval <= 1)
+            {
+                Util.log();
+                System.err.println("ERROR finding the metrics commit");
+                System.exit(5);
+            }
             Calendar metricsDate = COMMIT_IDS_WITH_DATES.get(metricsCommitId);
             int metricsCommitCount = COMMIT_IDS.indexOf(metricsCommitId);
 
