@@ -90,10 +90,15 @@ public class WholePipeline
         // REPOSITORY_HISTORY_FILE_PATH (git log with dates)
 
 
-     //   String line = createFinalFileDataLine("/Users/jevgenijapantiuchina/Desktop/smell-prediction/repository-analyzer/history/output-java/java/src/main/java/com/jsoniter/output/CodegenImplNative.java","b40fd4ff266525bd3113520bea2ca595781dfb28",true);
-      //  System.out.println(line);
+//        String line = createFinalFileDataLine("/Users/jevgenijapantiuchina/Desktop/smell-prediction/repository-analyzer/history/output-java/java/src/main/java/com/jsoniter/output/CodegenImplNative.java","b40fd4ff266525bd3113520bea2ca595781dfb28",true);
+//        System.out.println(line);
 
-       handleFilesInCommits();
+        String line = createFinalFileDataLine("/Users/jevgenijapantiuchina/Desktop/smell-prediction/repository-analyzer/history/output-java/java/src/test/java/com/jsoniter/TestNull.java", "1836034d76aa9858f8531f061b076a59e13a81ea", false);
+       System.out.println(line);
+
+
+            //fails d79fc1e6cec5ec702565e59625227d207488cb61
+       //handleFilesInCommits();
 
 
     }

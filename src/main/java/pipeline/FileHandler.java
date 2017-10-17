@@ -28,6 +28,7 @@ class FileHandler
         ArrayList<String> allFileNamesInCommit = new ArrayList<>();
         for (String commitID : COMMIT_IDS)
         {
+            System.out.println("Handling commitID:" + commitID);
             allFileNamesInCommit = getAllFileNamesInCommit(commitID);
             for (String fileNameInCommit : allFileNamesInCommit) //combination of file and commitId
             {
@@ -71,20 +72,20 @@ class FileHandler
 
     }
 
-    private static String getCommiIDBeforeDate(Calendar date)
+    private static String getCommiIdAfterDate(Calendar date)
     {
         int count = 0;
         String commitId = COMMIT_IDS.get(count);
         Calendar commitDate = COMMIT_IDS_WITH_DATES.get(commitId);
-        String previousCommitId = "";
+       // String previousCommitId = "";
         while (commitDate.before(date) && count < COMMIT_IDS.size() - 1)
         {
-            previousCommitId = commitId;
+           // previousCommitId = commitId;
             count++;
             commitId = COMMIT_IDS.get(count);
             commitDate = COMMIT_IDS_WITH_DATES.get(commitId);
         }
-        return previousCommitId;
+        return commitId;
     }
 
 
@@ -116,10 +117,41 @@ class FileHandler
     }
 
 
-    private static String getCommitIDBeforeNDays(String futureCommitId, int interval) throws ParseException {
+    //file must be present in interval
+    private static String getCommitIDBeforeNDaysWhereFileIsPresent(String fileName, String futureCommitId, int adddedCommitCount, int interval) throws ParseException, IOException {
+
+
         Calendar futureCommitDate = COMMIT_IDS_WITH_DATES.get(futureCommitId);
         Calendar metricsDate = getCommitDateBeforeOrAfterNDays(futureCommitDate, -interval);
-        String metricsCommitId = getCommiIDBeforeDate(metricsDate);
+        String metricsCommitId = getCommiIdAfterDate(metricsDate);
+        int count = COMMIT_IDS.indexOf(metricsCommitId);
+
+        String metricsCommitIdF = metricsCommitId;
+        while(!isFilePresentInCommit(fileName, metricsCommitIdF) && count + 1 < COMMIT_IDS.indexOf(futureCommitId)) // at leas 2 commits btw metric and future commit
+        {
+            metricsCommitIdF = COMMIT_IDS.get(count++);
+        }
+        if (!isFilePresentInCommit(fileName, metricsCommitIdF)) //not found, go backwards
+        {
+            count = COMMIT_IDS.indexOf(metricsCommitId);
+            String metricsCommitIdB = metricsCommitId;
+            while(!isFilePresentInCommit(fileName,metricsCommitIdB) && count > adddedCommitCount + 1)
+            {
+                metricsCommitIdB = COMMIT_IDS.get(count--);
+            }
+            if(!isFilePresentInCommit(fileName,metricsCommitIdB))
+            {
+                metricsCommitId = "";
+            }
+            else {
+                metricsCommitId = metricsCommitIdB;
+            }
+
+        }
+        else
+        {
+            metricsCommitId = metricsCommitIdF;
+        }
 
         return metricsCommitId;
     }
@@ -159,6 +191,11 @@ class FileHandler
 
 
         String addedInCommitId = getCommitIdWhenFileWasAdded(fileName);
+
+
+        //ignore files that were added and then removed and the added again
+       //ArrayList<String> commitsFromAddedToFuture getAllCommitsBetween(addedInCommitId,futureCommitId);
+
         int addedCommitCount = COMMIT_IDS.indexOf(addedInCommitId);
         Calendar addedCommitDate = COMMIT_IDS_WITH_DATES.get(addedInCommitId);
         long numOfDaysFrom1stCommitToWhenAdded = getNumDaysBtw2Dates(firstCommitDate, addedCommitDate);
@@ -167,21 +204,26 @@ class FileHandler
         int countFromAddedToFuture = futureCommitCount - addedCommitCount;
         long numberOfDaysFromAddedToFuture = numOfDaysFrom1stCommit - numOfDaysFrom1stCommitToWhenAdded;
 
-        if (numberOfDaysFromAddedToFuture - interval > 0 && countFromAddedToFuture > 2)
+        String metricsCommitId = getCommitIDBeforeNDaysWhereFileIsPresent(fileName, futureCommitId, addedCommitCount, interval); // here"" check this method
+
+        //check if file is present from added to current
+
+
+
+        if (numberOfDaysFromAddedToFuture - interval > 0 && countFromAddedToFuture > 2 && !metricsCommitId.equals("") )
         {
             //get CommitId before interval / Metrics commit ID
-            String metricsCommitId = getCommitIDBeforeNDays(futureCommitId, interval);
-            while (!isFilePresentInCommit(fileName, metricsCommitId) && interval > 2)
-            {
-                interval--;
-                metricsCommitId = getCommitIDBeforeNDays(futureCommitId, interval);
-            }
-            if (interval <= 1)
-            {
-                Util.log();
-                System.err.println("ERROR finding the metrics commit");
-                System.exit(5);
-            }
+          //  while (metricsCommitId.equals("") && !isFilePresentInCommit(fileName, metricsCommitId) && interval > 2)
+            //{
+//                interval--;
+             //   metricsCommitId = getCommitIDBeforeNDaysWhereFileIsPresent(fileName, futureCommitId, interval);
+           // }
+//            if (interval <= 1)
+//            {
+//                Util.log();
+//                System.err.println("ERROR finding the metrics commit");
+//                System.exit(5);
+//            }
             Calendar metricsDate = COMMIT_IDS_WITH_DATES.get(metricsCommitId);
             int metricsCommitCount = COMMIT_IDS.indexOf(metricsCommitId);
 
@@ -238,7 +280,9 @@ class FileHandler
             ArrayList<Double> slopesRecent = slopes.get("slopesRecent");
             ArrayList<Double> metrics = slopes.get("metrics");
 
-            //if first interval has no history, don't consider this file
+            //if first interval has no history, don't consider this file TODO
+
+
             if (interval == 15 && slopesHistory.get(0) == -1.0 && slopesHistory.get(1) == -1.0 && slopesHistory.get(2) == -1.0 && slopesHistory.get(3) == -1.0 && slopesHistory.get(4) == -1.0 && slopesHistory.get(5) == -1.0 && slopesHistory.get(6) == -1.0)
             {
                 considerThisFile = false;
@@ -267,9 +311,9 @@ class FileHandler
                 }
 
                 i++;
-                System.out.println("interval: " + interval + " filename: " +  fileName + " futureCommitId: " + futureCommitId + " isSmelly: " + isSmelly);
+                //System.out.println("interval: " + interval + " filename: " +  fileName + " futureCommitId: " + futureCommitId + " isSmelly: " + isSmelly);
 
-                System.out.println("history: " + slopesHistory + " slopesRecent: " + slopesRecent + " metrics: " + metrics + " considerThisFile: " + considerThisFile);
+                //System.out.println("history: " + slopesHistory + " slopesRecent: " + slopesRecent + " metrics: " + metrics + " considerThisFile: " + considerThisFile);
 
             }
 
