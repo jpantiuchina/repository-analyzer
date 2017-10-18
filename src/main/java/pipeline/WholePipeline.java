@@ -56,10 +56,7 @@ public class WholePipeline
     static LinkedHashMap<String, Calendar> COMMIT_IDS_WITH_DATES = new LinkedHashMap<>();
     static ArrayList<String> SMELLY_FILE_NAMES = new ArrayList<>();
 
-
-    public static int DAYS;
-
-
+    
     public static void main(String[] args) throws IOException, InterruptedException, ParseException
     {
         System.err.println("");
@@ -71,14 +68,10 @@ public class WholePipeline
         {
             log();
             System.out.println("Usage arguments: <repository url>");
-            //System.out.println("Usage arguments: <repository url> <time interval in days> <# of clean classes>");
-          //  System.out.println("Wrong 3rd [--keep-history] argument");
             System.exit(1);
         }
 
         String repositoryURL = args[0].trim();
-        //DAYS = Integer.parseInt(args[1]);
-       // System.out.println("URL: " + repositoryURL);
         REPO_NAME = getResultFileNameFromRepositoryURL(repositoryURL);
 
         createPaths();
@@ -87,26 +80,9 @@ public class WholePipeline
         retrieveWholeRepoHistory(repositoryURL);
         System.out.println("History files were successfully created for repository: " + REPO_NAME);
 
-
-       // String line = createFinalFileDataLine("/Users/jevgenijapantiuchina/Desktop/smell-prediction/repository-analyzer/history/output-java/java/src/main/java/com/jsoniter/output/CodegenImplNative.java","b40fd4ff266525bd3113520bea2ca595781dfb28",true);
-      //  System.out.println(line);
-
-       // line = createFinalFileDataLine("/Users/jevgenijapantiuchina/Desktop/smell-prediction/repository-analyzer/history/output-java/java/src/test/java/com/jsoniter/TestNull.java", "1836034d76aa9858f8531f061b076a59e13a81ea", false);
-      // System.out.println(line);
-
-
         createEmptyFinalResultFiles();
 
-       // handleFileInCommit("/Users/jevgenijapantiuchina/Desktop/smell-prediction/repository-analyzer/history/output-java/java/src/main/java/com/jsoniter/output/CodegenImplNative.java","b40fd4ff266525bd3113520bea2ca595781dfb28");
-
-       // handleFileInCommit("/Users/jevgenijapantiuchina/Desktop/smell-prediction/repository-analyzer/history/output-java/java/src/test/java/com/jsoniter/TestNull.java", "1836034d76aa9858f8531f061b076a59e13a81ea");
-     //   handleFileInCommit("/Users/jevgenijapantiuchina/Desktop/smell-prediction/repository-analyzer/history/output-java/java/src/test/java/com/jsoniter/TestNull.java", "1836034d76aa9858f8531f061b076a59e13a81ea");
-
-
-//        handleFileInCommit("/Users/jevgenijapantiuchina/Desktop/smell-prediction/repository-analyzer/history/output-java/java/src/test/java/com/jsoniter/TestNull.java", "1836034d76aa9858f8531f061b076a59e13a81ea");
-
-            //fails d79fc1e6cec5ec702565e59625227d207488cb61
-       handleFilesInCommits();
+        handleFilesInCommits();
 
 
     }
