@@ -22,8 +22,9 @@ import static pipeline.WholePipeline.*;
 class FileHandler
 {
 
+    static long numberOfDaysFromAddedToFuture = 0;
+
     static void handleFilesInCommits() throws IOException, ParseException {
-        createEmptyFinalResultFiles();
 
         ArrayList<String> allFileNamesInCommit = new ArrayList<>();
         for (String commitID : COMMIT_IDS)
@@ -32,14 +33,16 @@ class FileHandler
             allFileNamesInCommit = getAllFileNamesInCommit(commitID);
             for (String fileNameInCommit : allFileNamesInCommit) //combination of file and commitId
             {
+                //System.out.println("File: " + fileNameInCommit);
                 handleFileInCommit(fileNameInCommit, commitID); //save file data to clean or smelly result file
             }
         }
     }
 
 
-    private static void handleFileInCommit(String fileName, String commitId) throws IOException, ParseException {
+    static void handleFileInCommit(String fileName, String commitId) throws IOException, ParseException {
         ArrayList <String> smells = getSmellsForFileInCommit(fileName,commitId);
+        //System.out.println("Found smells: " + smells);
         if (smells.contains("true")) //save to smelly file
         {
             if(!SMELLY_FILE_NAMES.contains(fileName))
@@ -49,7 +52,7 @@ class FileHandler
                 String finalLine = createFinalFileDataLine(fileName, commitId, true);
 
                 // add finalLine to output file
-                if (finalLine != "")
+                if (!finalLine.isEmpty())
                     writeLineToFile(finalLine, PATH_TO_SMELLY_FINAL_RESULT_FILE);
 
             }
@@ -65,7 +68,7 @@ class FileHandler
               //  System.out.println("FINAL LINE: " + finalLine);
               //  System.out.println("PATH: " + PATH_TO_CLEAN_FINAL_RESULT_FILE);
                 // add finalLine to output file
-                if (finalLine != "")
+                if (!finalLine.isEmpty())
                     writeLineToFile(finalLine, PATH_TO_CLEAN_FINAL_RESULT_FILE);
             }
         }
@@ -158,7 +161,7 @@ class FileHandler
 
     private static ArrayList<Double> getFileSlopesForAllMetrics(String fileName, String beginCommitIncluding, String lastCommitExcluding) throws IOException
     {
-        ArrayList<Double> slopes = null;
+        ArrayList<Double> slopes = new ArrayList<>(Arrays.asList(-1.0, -1.0, -1.0, -1.0, -1.0, -1.0, -1.0, -1.0, -1.0, -1.0, -1.0, -1.0, -1.0, -1.0));
 
         ArrayList<String> slopeCommits = getAllCommitsBetween(beginCommitIncluding, lastCommitExcluding);
         slopeCommits = removeCommitsInWhichFileWasNotPresent(fileName, slopeCommits);
@@ -185,9 +188,15 @@ class FileHandler
         int futureCommitCount = COMMIT_IDS.indexOf(futureCommitId);
         Calendar futureCommitDate = COMMIT_IDS_WITH_DATES.get(futureCommitId);
 
-        String firstCommitId = COMMIT_IDS_WITH_DATES.keySet().iterator().next();
+        //System.out.println("CCOMMIT_IDS_WITH_DATES" + COMMIT_IDS_WITH_DATES);
+
+        //String firstCommitId = COMMIT_IDS_WITH_DATES.keySet().iterator().next();
+        String firstCommitId = COMMIT_IDS.get(0);
         Calendar firstCommitDate = COMMIT_IDS_WITH_DATES.get(firstCommitId);
         long numOfDaysFrom1stCommit = getNumDaysBtw2Dates(firstCommitDate, futureCommitDate);
+
+      //  System.out.println("firstCommitId: " + firstCommitId + " " + firstCommitDate.toInstant());
+     //   System.out.println("futureCommitId: " + futureCommitId + " " + futureCommitDate.toInstant());
 
 
         String addedInCommitId = getCommitIdWhenFileWasAdded(fileName);
@@ -202,13 +211,21 @@ class FileHandler
 
 
         int countFromAddedToFuture = futureCommitCount - addedCommitCount;
-        long numberOfDaysFromAddedToFuture = numOfDaysFrom1stCommit - numOfDaysFrom1stCommitToWhenAdded;
+       numberOfDaysFromAddedToFuture = numOfDaysFrom1stCommit - numOfDaysFrom1stCommitToWhenAdded;
+        //numberOfDaysFromAddedToFuture = numberOfDaysFromAddedToFuture;
+
+     //   System.out.println("numOfDaysFrom1stCommit" + numOfDaysFrom1stCommit);
+       // System.out.println("numOfDaysFrom1stCommitToWhenAdded: " + numOfDaysFrom1stCommitToWhenAdded);
 
         String metricsCommitId = getCommitIDBeforeNDaysWhereFileIsPresent(fileName, futureCommitId, addedCommitCount, interval); // here"" check this method
 
         //check if file is present from added to current
 
 
+        //System.out.println("numberOfDaysFromAddedToFuture: " + numberOfDaysFromAddedToFuture);
+        //System.out.println("interval: " + interval);
+//        System.out.println("countFromAddedToFuture: " + countFromAddedToFuture );
+      //  System.out.println("metricsCommitId: " + metricsCommitId);
 
         if (numberOfDaysFromAddedToFuture - interval > 0 && countFromAddedToFuture > 2 && !metricsCommitId.equals("") )
         {
@@ -262,6 +279,7 @@ class FileHandler
     static String createFinalFileDataLine(String fileName, String futureCommitId, boolean isSmelly) throws IOException, ParseException
     {
 
+        //System.out.println("createFinalFileDataLine");
         int[]intervalsInDays = {15, 30, 60, 90, 120};
         int i = 0;
 
@@ -271,9 +289,8 @@ class FileHandler
 
         while (i < 5 && considerThisFile)
         {
+            //System.out.println("i= " + i);
             int interval = intervalsInDays[i];
-
-
 
             Map<String,ArrayList<Double>> slopes = getMetricsHistorySlopesRecentSlopesForFileInInterval(fileName, interval, futureCommitId);
             ArrayList<Double> slopesHistory = slopes.get("slopesHistory");
@@ -283,7 +300,10 @@ class FileHandler
             //if first interval has no history, don't consider this file TODO
 
 
-            if (interval == 15 && slopesHistory.get(0) == -1.0 && slopesHistory.get(1) == -1.0 && slopesHistory.get(2) == -1.0 && slopesHistory.get(3) == -1.0 && slopesHistory.get(4) == -1.0 && slopesHistory.get(5) == -1.0 && slopesHistory.get(6) == -1.0)
+
+            //System.out.println("slopes history" + slopesHistory);
+
+            if (interval == 15 && slopesRecent.get(0) == -1.0 && slopesRecent.get(1) == -1.0 && slopesRecent.get(0) == -1.0 && slopesRecent.get(1) == -1.0 && slopesRecent.get(2) == -1.0 && slopesRecent.get(3) == -1.0 && slopesRecent.get(4) == -1.0 && slopesRecent.get(5) == -1.0 && slopesRecent.get(6) == -1.0)
             {
                 considerThisFile = false;
             }
@@ -324,7 +344,7 @@ class FileHandler
         if (considerThisFile)
         {
             resultLine.append(fileName).append(",")
-                    .append(futureCommitId).append(",").append(allMetricsAndSlopesForAllIntervals);
+                    .append(futureCommitId).append(",").append(numberOfDaysFromAddedToFuture).append(",").append(allMetricsAndSlopesForAllIntervals);
 
 
             if (isSmelly)
@@ -336,8 +356,9 @@ class FileHandler
                     resultLine.append(smell).append(",");
                 }
             }
-
+            //System.out.println("BLABLABLA"+resultLine);
         }
+
         return resultLine.toString().replaceAll(",$", ""); //remove last comma
 
     }

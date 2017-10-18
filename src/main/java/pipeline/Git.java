@@ -51,8 +51,9 @@ final class Git
             writeLineToFile(line,REPOSITORY_HISTORY_FILE_PATH);
         }
 
-
+        //System.out.println("AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA");
         COMMIT_IDS_WITH_DATES = FileHandler.getAllCommitIdsFromConsoleLines(linesFromConsole);
+
         ArrayList<String> commitIds = new ArrayList<>(COMMIT_IDS_WITH_DATES.keySet());
         removeFileIfPresent(COMMIT_IDS_FILE_PATH);
         for (String commit : commitIds)

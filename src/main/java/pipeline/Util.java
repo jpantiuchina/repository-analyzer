@@ -27,6 +27,7 @@ try-with-resources
      */
     static void writeLineToFile(String lineToAdd, String pathToFile) throws IOException
     {
+       // System.out.println("Line:" + lineToAdd);
         try (PrintStream out = new PrintStream(new FileOutputStream(pathToFile, true)))
         {
             out.println(lineToAdd);
@@ -79,8 +80,9 @@ try-with-resources
 
     static Calendar getCommitDateBeforeOrAfterNDays(Calendar date, int days) throws ParseException {
                  //Util.log();
-                 date.add(Calendar.DATE, days);
-                 return date;
+                Calendar calendar = (Calendar) date.clone();
+                 calendar.add(Calendar.DATE, days);
+                 return calendar;
              }
 
     static void createEmptyFinalResultFiles() throws IOException
@@ -104,7 +106,7 @@ try-with-resources
         System.out.println("Results will be saved (or overwritten) to file " + PATH_TO_SMELLY_FINAL_RESULT_FILE);
 
         try (PrintStream ps = new PrintStream(PATH_TO_SMELLY_FINAL_RESULT_FILE)) {
-            ps.println("fileName, futureCommitId," +
+            ps.println("fileName, futureCommitId, fileSurvivalInDays," +
                             "CBO15,      WMC15,      DIT15,      NOC15,      RFC15,      LCOM15,      NOM15,      NOPM15,      NOSM15,      NOF15,      NOPF15,      NOSF15,      NOSI15,      LOC15," +
                             "CBORecentWhenInterval15,      WMCRecentWhenInterval15,      DITRecentWhenInterval15,      NOCRecentWhenInterval15,      RFCRecentWhenInterval15,      LCOMRecentWhenInterval15,      NOMRecentWhenInterval15,      NOPMRecentWhenInterval15,      NOSMRecentWhenInterval15,      NOFRecentWhenInterval15,      NOPFRecentWhenInterval15,      NOSFRecentWhenInterval15,      NOSIRecentWhenInterval15,      LOCRecentWhenInterval15," +
                             "CBOslopeAllHistory15, WMCslopeAllHistory15, DITslopeAllHistory15, NOCslopeAllHistory15, RFCslopeAllHistory15, LCOMslopeAllHistory15, NOMslopeAllHistory15, NOPMslopeAllHistory15, NOSMslopeAllHistory15, NOFslopeAllHistory15, NOPFslopeAllHistory15, NOSFslopeAllHistory15, NOSIslopeAllHistory15, LOCslopeAllHistory15, " +
@@ -132,7 +134,7 @@ try-with-resources
         System.out.println("Results will be saved (or overwritten) to file " + PATH_TO_CLEAN_FINAL_RESULT_FILE);
 
         try (PrintStream ps = new PrintStream(PATH_TO_CLEAN_FINAL_RESULT_FILE)) {
-            ps.println("fileName, futureCommitId," +
+            ps.println("fileName, futureCommitId, fileSurvivalInDays," +
                     "CBO15,      WMC15,      DIT15,      NOC15,      RFC15,      LCOM15,      NOM15,      NOPM15,      NOSM15,      NOF15,      NOPF15,      NOSF15,      NOSI15,      LOC15," +
                     "CBORecentWhenInterval15,      WMCRecentWhenInterval15,      DITRecentWhenInterval15,      NOCRecentWhenInterval15,      RFCRecentWhenInterval15,      LCOMRecentWhenInterval15,      NOMRecentWhenInterval15,      NOPMRecentWhenInterval15,      NOSMRecentWhenInterval15,      NOFRecentWhenInterval15,      NOPFRecentWhenInterval15,      NOSFRecentWhenInterval15,      NOSIRecentWhenInterval15,      LOCRecentWhenInterval15," +
                     "CBOslopeAllHistory15, WMCslopeAllHistory15, DITslopeAllHistory15, NOCslopeAllHistory15, RFCslopeAllHistory15, LCOMslopeAllHistory15, NOMslopeAllHistory15, NOPMslopeAllHistory15, NOSMslopeAllHistory15, NOFslopeAllHistory15, NOPFslopeAllHistory15, NOSFslopeAllHistory15, NOSIslopeAllHistory15, LOCslopeAllHistory15, " +
