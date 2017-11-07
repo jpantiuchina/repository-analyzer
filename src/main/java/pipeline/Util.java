@@ -6,13 +6,9 @@ import java.io.IOException;
 import java.io.PrintStream;
 import java.text.ParseException;
 import java.util.Calendar;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
+
 
 import static pipeline.WholePipeline.*;
-import static pipeline.WholePipeline.FILE_PATH_TO_LINES_FROM_CONSOLE_RUNNING_PMD;
-import static pipeline.WholePipeline.PATH_TO_REPOSITORY;
-
 
 
 class Util
@@ -20,14 +16,8 @@ class Util
 
     private final static String TAG = Git.class.getCanonicalName();
 
-    /*
-    Equivalent to: PrintStream out = new PrintStream(new FileOutputStream(pathToFile, true))
-try { out.println(lineToAdd); } finally { out.close(); }
-try-with-resources
-     */
     static void writeLineToFile(String lineToAdd, String pathToFile) throws IOException
     {
-       // System.out.println("Line:" + lineToAdd);
         try (PrintStream out = new PrintStream(new FileOutputStream(pathToFile, true)))
         {
             out.println(lineToAdd);
@@ -37,128 +27,115 @@ try-with-resources
 
 
     static void log()
-    {   //[2] - gets the previous method, hence, the one from which log() i called
+    {   //[2] - gets the previous method, which is the one from which log() i called
         System.err.println("LOG: " + TAG + "." + Thread.currentThread().getStackTrace()[2].getMethodName());
     }
 
 
-    static void createPaths()
-    {
-        OUTPUT_FOLDER_NAME = "history/output-" + REPO_NAME + "/";
+    static void createPaths(String folderName) throws IOException {
+        REPO_FOLDER_NAME = folderName.trim();
+        REPOSITORY_HISTORY_FILE_PATH = REPO_FOLDER_NAME + "linesFromConsole.txt";
+        COMMIT_IDS_FILE_PATH = REPO_FOLDER_NAME + "sorted_commit_Ids.txt";
 
-        PATH_TO_REPOSITORY = new File(OUTPUT_FOLDER_NAME + REPO_NAME);
+        File result = new File("result");
 
-        REPOSITORY_HISTORY_FILE_PATH = PATH_TO_REPOSITORY + "/linesFromConsole.txt";
-        COMMIT_IDS_FILE_PATH = PATH_TO_REPOSITORY + "/sorted_commit_Ids.txt";
-        FILE_PATH_TO_LINES_FROM_CONSOLE_ON_COMMITS_CHECKOUT = PATH_TO_REPOSITORY + "/linesFromConsoleOnCommitsCheckout.txt";
-        FILE_PATH_TO_LINES_FROM_CONSOLE_RUNNING_PMD = PATH_TO_REPOSITORY + "/LinesFromConsoleRunningPmd.txt";
-    }
-
-
-    static String getResultFileNameFromRepositoryURL(String url)
-    {
-        Util.log();
-
-        final Pattern pattern = Pattern.compile("([^\\/]+)$");
-        final Matcher matcher = pattern.matcher(url);
-
-        String filename = null;
-        if (matcher.find())
+        if (result.mkdir())
         {
-            filename = matcher.group(0);
+            System.out.print(result.toString() + " folder was created. ");
         }
         else
         {
-            System.err.println("Impossible to generate result filename from repository");
-            System.exit(4);
+            System.out.print("file will be saved to the " + result.toString());
         }
 
+        String repoName = REPO_FOLDER_NAME.replaceFirst("^repos/","");
+        repoName = repoName.replaceAll("/$","");
 
-        return (filename);
+        PATH_TO_SMELLY_FINAL_RESULT_FILE = ((result.toString()).concat("/").concat(repoName).concat("-smelly").concat(".csv"));
+        PATH_TO_CLEAN_FINAL_RESULT_FILE = ((result.toString()).concat("/").concat(repoName).concat("-clean").concat(".csv"));
+
+        removeFileIfPresent(PATH_TO_SMELLY_FINAL_RESULT_FILE);
+        removeFileIfPresent(PATH_TO_CLEAN_FINAL_RESULT_FILE);
+
+        createEmptyFinalResultFiles();
+
     }
 
 
-    static Calendar getCommitDateBeforeOrAfterNDays(Calendar date, int days) throws ParseException {
-                 //Util.log();
+    static Calendar getDateBeforeOrAfterNDays(Calendar date, int days) throws ParseException {
                 Calendar calendar = (Calendar) date.clone();
                  calendar.add(Calendar.DATE, days);
                  return calendar;
              }
 
-    static void createEmptyFinalResultFiles() throws IOException
+
+    private static void createEmptyFinalResultFiles() throws IOException
     {
-        //removes previous result file
-        File result = new File("result");
-
-        if (result.mkdir())
-        {
-            System.out.print(result.toString() + " folder created. ");
-        }
-        else
-        {
-            System.out.print(result.toString() + " folder was not created because it already exist. ");
-        }
-
-        PATH_TO_SMELLY_FINAL_RESULT_FILE = ((result.toString()).concat("/").concat(REPO_NAME).concat("-smelly").concat(".csv"));
-        PATH_TO_CLEAN_FINAL_RESULT_FILE = ((result.toString()).concat("/").concat(REPO_NAME).concat("-clean").concat(".csv"));
-
 
         System.out.println("Results will be saved (or overwritten) to file " + PATH_TO_SMELLY_FINAL_RESULT_FILE);
 
+        String data = "filename,commitId," +
+                "LOC15,LCOM15,WMC15,RFC15,CBO15,NOM15,NOA15,DIT15,NOC15,"+
+                "LOC15recent,LCOM15recent,WMC15recent,RFC15recent,CBO15recent,NOM15recent,NOA15recent,DIT15recent,NOC15recent,"+
+                "LOC15hist,LCOM15hist,WMC15hist,RFC15hist,CBO15hist,NOM15hist,NOA15hist,DIT15hist,NOC15hist,"+
+
+                "LOC30,LCOM30,WMC30,RFC30,CBO30,NOM30,NOA30,DIT30,NOC30,"+
+                "LOC30recent,LCOM30recent,WMC30recent,RFC30recent,CBO30recent,NOM30recent,NOA30recent,DIT30recent,NOC30recent,"+
+                "LOC30hist,LCOM30hist,WMC30hist,RFC30hist,CBO30hist,NOM30hist,NOA30hist,DIT30hist,NOC30hist,"+
+
+                "LOC45,LCOM45,WMC45,RFC45,CBO45,NOM45,NOA45,DIT45,NOC45,"+
+                "LOC45recent,LCOM45recent,WMC45recent,RFC45recent,CBO45recent,NOM45recent,NOA45recent,DIT45recent,NOC45recent,"+
+                "LOC45hist,LCOM45hist,WMC45hist,RFC45hist,CBO45hist,NOM45hist,NOA45hist,DIT45hist,NOC45hist,"+
+
+                "LOC60,LCOM60,WMC60,RFC60,CBO60,NOM60,NOA60,DIT60,NOC60,"+
+                "LOC60recent,LCOM60recent,WMC60recent,RFC60recent,CBO60recent,NOM60recent,NOA60recent,DIT60recent,NOC60recent,"+
+                "LOC60hist,LCOM60hist,WMC60hist,RFC60hist,CBO60hist,NOM60hist,NOA60hist,DIT60hist,NOC60hist,"+
+
+                "LOC75,LCOM75,WMC75,RFC75,CBO75,NOM75,NOA75,DIT75,NOC75,"+
+                "LOC75recent,LCOM75recent,WMC75recent,RFC75recent,CBO75recent,NOM75recent,NOA75recent,DIT75recent,NOC75recent,"+
+                "LOC75hist,LCOM75hist,WMC75hist,RFC75hist,CBO75hist,NOM75hist,NOA75hist,DIT75hist,NOC75hist,"+
+
+                "LOC90,LCOM90,WMC90,RFC90,CBO90,NOM90,NOA90,DIT90,NOC90,"+
+                "LOC90recent,LCOM90recent,WMC90recent,RFC90recent,CBO90recent,NOM90recent,NOA90recent,DIT90recent,NOC90recent,"+
+                "LOC90hist,LCOM90hist,WMC90hist,RFC90hist,CBO90hist,NOM90hist,NOA90hist,DIT90hist,NOC90hist,"+
+
+                "LOC105,LCOM105,WMC105,RFC105,CBO105,NOM105,NOA105,DIT105,NOC105,"+
+                "LOC105recent,LCOM105recent,WMC105recent,RFC105recent,CBO105recent,NOM105recent,NOA105recent,DIT105recent,NOC105recent,"+
+                "LOC105hist,LCOM105hist,WMC105hist,RFC105hist,CBO105hist,NOM105hist,NOA105hist,DIT105hist,NOC105hist,"+
+
+                "LOC120,LCOM120,WMC120,RFC120,CBO120,NOM120,NOA120,DIT120,NOC120,"+
+                "LOC120recent,LCOM120recent,WMC120recent,RFC120recent,CBO120recent,NOM120recent,NOA120recent,DIT120recent,NOC120recent,"+
+                "LOC120hist,LCOM120hist,WMC120hist,RFC120hist,CBO120hist,NOM120hist,NOA120hist,DIT120hist,NOC120hist,";
+
+
+        String smells = "isBlob, isCDSBP, isComplexClass, isFuncDec, isSpaghCode";
+
         try (PrintStream ps = new PrintStream(PATH_TO_SMELLY_FINAL_RESULT_FILE)) {
-            ps.println("fileName, futureCommitId, fileSurvivalInDays," +
-                            "CBO15,      WMC15,      DIT15,      NOC15,      RFC15,      LCOM15,      NOM15,      NOPM15,      NOSM15,      NOF15,      NOPF15,      NOSF15,      NOSI15,      LOC15," +
-                            "CBORecentWhenInterval15,      WMCRecentWhenInterval15,      DITRecentWhenInterval15,      NOCRecentWhenInterval15,      RFCRecentWhenInterval15,      LCOMRecentWhenInterval15,      NOMRecentWhenInterval15,      NOPMRecentWhenInterval15,      NOSMRecentWhenInterval15,      NOFRecentWhenInterval15,      NOPFRecentWhenInterval15,      NOSFRecentWhenInterval15,      NOSIRecentWhenInterval15,      LOCRecentWhenInterval15," +
-                            "CBOslopeAllHistory15, WMCslopeAllHistory15, DITslopeAllHistory15, NOCslopeAllHistory15, RFCslopeAllHistory15, LCOMslopeAllHistory15, NOMslopeAllHistory15, NOPMslopeAllHistory15, NOSMslopeAllHistory15, NOFslopeAllHistory15, NOPFslopeAllHistory15, NOSFslopeAllHistory15, NOSIslopeAllHistory15, LOCslopeAllHistory15, " +
-
-                            "CBO30,      WMC30,      DIT30,      NOC30,      RFC30,      LCOM30,      NOM30,      NOPM30,      NOSM30,      NOF30,      NOPF30,      NOSF30,      NOSI30,      LOC30," +
-                            "CBORecentWhenInterval30,      WMCRecentWhenInterval30,      DITRecentWhenInterval30,      NOCRecentWhenInterval30,      RFCRecentWhenInterval30,      LCOMRecentWhenInterval30,      NOMRecentWhenInterval30,      NOPMRecentWhenInterval30,      NOSMRecentWhenInterval30,      NOFRecentWhenInterval30,      NOPFRecentWhenInterval30,      NOSFRecentWhenInterval30,      NOSIRecentWhenInterval30,      LOCRecentWhenInterval30," +
-                            "CBOslopeAllHistory30, WMCslopeAllHistory30, DITslopeAllHistory30, NOCslopeAllHistory30, RFCslopeAllHistory30, LCOMslopeAllHistory30, NOMslopeAllHistory30, NOPMslopeAllHistory30, NOSMslopeAllHistory30, NOFslopeAllHistory30, NOPFslopeAllHistory30, NOSFslopeAllHistory30, NOSIslopeAllHistory30, LOCslopeAllHistory30, " +
-
-                            "CBO60,      WMC60,      DIT60,      NOC60,      RFC60,      LCOM60,      NOM60,      NOPM60,      NOSM60,      NOF60,      NOPF60,      NOSF60,      NOSI60,      LOC60," +
-                            "CBORecentWhenInterval60,      WMCRecentWhenInterval60,      DITRecentWhenInterval60,      NOCRecentWhenInterval60,      RFCRecentWhenInterval60,      LCOMRecentWhenInterval60,      NOMRecentWhenInterval60,      NOPMRecentWhenInterval60,      NOSMRecentWhenInterval60,      NOFRecentWhenInterval60,      NOPFRecentWhenInterval60,      NOSFRecentWhenInterval60,      NOSIRecentWhenInterval60,      LOCRecentWhenInterval60," +
-                            "CBOslopeAllHistory60, WMCslopeAllHistory60, DITslopeAllHistory60, NOCslopeAllHistory60, RFCslopeAllHistory60, LCOMslopeAllHistory60, NOMslopeAllHistory60, NOPMslopeAllHistory60, NOSMslopeAllHistory60, NOFslopeAllHistory60, NOPFslopeAllHistory60, NOSFslopeAllHistory60, NOSIslopeAllHistory60, LOCslopeAllHistory60, " +
-
-                            "CBO90,      WMC90,      DIT90,      NOC90,      RFC90,      LCOM90,      NOM90,      NOPM90,      NOSM90,      NOF90,      NOPF90,      NOSF90,      NOSI90,      LOC90," +
-                            "CBORecentWhenInterval90,      WMCRecentWhenInterval90,      DITRecentWhenInterval90,      NOCRecentWhenInterval90,      RFCRecentWhenInterval90,      LCOMRecentWhenInterval90,      NOMRecentWhenInterval90,      NOPMRecentWhenInterval90,      NOSMRecentWhenInterval90,      NOFRecentWhenInterval90,      NOPFRecentWhenInterval90,      NOSFRecentWhenInterval90,      NOSIRecentWhenInterval90,      LOCRecentWhenInterval90," +
-                            "CBOslopeAllHistory90, WMCslopeAllHistory90, DITslopeAllHistory90, NOCslopeAllHistory90, RFCslopeAllHistory90, LCOMslopeAllHistory90, NOMslopeAllHistory90, NOPMslopeAllHistory90, NOSMslopeAllHistory90, NOFslopeAllHistory90, NOPFslopeAllHistory90, NOSFslopeAllHistory90, NOSIslopeAllHistory90, LOCslopeAllHistory90, " +
-
-                            "CBO120,      WMC120,      DIT120,      NOC120,      RFC120,      LCOM120,      NOM120,      NOPM120,      NOSM120,      NOF120,      NOPF120,      NOSF120,      NOSI120,      LOC120," +
-                            "CBORecentWhenInterval120,      WMCRecentWhenInterval120,      DITRecentWhenInterval120,      NOCRecentWhenInterval120,      RFCRecentWhenInterval120,      LCOMRecentWhenInterval120,      NOMRecentWhenInterval120,      NOPMRecentWhenInterval120,      NOSMRecentWhenInterval120,      NOFRecentWhenInterval120,      NOPFRecentWhenInterval120,      NOSFRecentWhenInterval120,      NOSIRecentWhenInterval120,      LOCRecentWhenInterval120," +
-                            "CBOslopeAllHistory120, WMCslopeAllHistory120, DITslopeAllHistory120, NOCslopeAllHistory120, RFCslopeAllHistory120, LCOMslopeAllHistory120, NOMslopeAllHistory120, NOPMslopeAllHistory120, NOSMslopeAllHistory120, NOFslopeAllHistory120, NOPFslopeAllHistory120, NOSFslopeAllHistory120, NOSIslopeAllHistory120, LOCslopeAllHistory120, " +
-                    "isBlob, isCoupling, isNPath"
-
-            );
+            ps.println(data.concat(smells));
         }
 
         System.out.println("Results will be saved (or overwritten) to file " + PATH_TO_CLEAN_FINAL_RESULT_FILE);
 
         try (PrintStream ps = new PrintStream(PATH_TO_CLEAN_FINAL_RESULT_FILE)) {
-            ps.println("fileName, futureCommitId, fileSurvivalInDays," +
-                    "CBO15,      WMC15,      DIT15,      NOC15,      RFC15,      LCOM15,      NOM15,      NOPM15,      NOSM15,      NOF15,      NOPF15,      NOSF15,      NOSI15,      LOC15," +
-                    "CBORecentWhenInterval15,      WMCRecentWhenInterval15,      DITRecentWhenInterval15,      NOCRecentWhenInterval15,      RFCRecentWhenInterval15,      LCOMRecentWhenInterval15,      NOMRecentWhenInterval15,      NOPMRecentWhenInterval15,      NOSMRecentWhenInterval15,      NOFRecentWhenInterval15,      NOPFRecentWhenInterval15,      NOSFRecentWhenInterval15,      NOSIRecentWhenInterval15,      LOCRecentWhenInterval15," +
-                    "CBOslopeAllHistory15, WMCslopeAllHistory15, DITslopeAllHistory15, NOCslopeAllHistory15, RFCslopeAllHistory15, LCOMslopeAllHistory15, NOMslopeAllHistory15, NOPMslopeAllHistory15, NOSMslopeAllHistory15, NOFslopeAllHistory15, NOPFslopeAllHistory15, NOSFslopeAllHistory15, NOSIslopeAllHistory15, LOCslopeAllHistory15, " +
-
-                    "CBO30,      WMC30,      DIT30,      NOC30,      RFC30,      LCOM30,      NOM30,      NOPM30,      NOSM30,      NOF30,      NOPF30,      NOSF30,      NOSI30,      LOC30," +
-                    "CBORecentWhenInterval30,      WMCRecentWhenInterval30,      DITRecentWhenInterval30,      NOCRecentWhenInterval30,      RFCRecentWhenInterval30,      LCOMRecentWhenInterval30,      NOMRecentWhenInterval30,      NOPMRecentWhenInterval30,      NOSMRecentWhenInterval30,      NOFRecentWhenInterval30,      NOPFRecentWhenInterval30,      NOSFRecentWhenInterval30,      NOSIRecentWhenInterval30,      LOCRecentWhenInterval30," +
-                    "CBOslopeAllHistory30, WMCslopeAllHistory30, DITslopeAllHistory30, NOCslopeAllHistory30, RFCslopeAllHistory30, LCOMslopeAllHistory30, NOMslopeAllHistory30, NOPMslopeAllHistory30, NOSMslopeAllHistory30, NOFslopeAllHistory30, NOPFslopeAllHistory30, NOSFslopeAllHistory30, NOSIslopeAllHistory30, LOCslopeAllHistory30, " +
-
-                    "CBO60,      WMC60,      DIT60,      NOC60,      RFC60,      LCOM60,      NOM60,      NOPM60,      NOSM60,      NOF60,      NOPF60,      NOSF60,      NOSI60,      LOC60," +
-                    "CBORecentWhenInterval60,      WMCRecentWhenInterval60,      DITRecentWhenInterval60,      NOCRecentWhenInterval60,      RFCRecentWhenInterval60,      LCOMRecentWhenInterval60,      NOMRecentWhenInterval60,      NOPMRecentWhenInterval60,      NOSMRecentWhenInterval60,      NOFRecentWhenInterval60,      NOPFRecentWhenInterval60,      NOSFRecentWhenInterval60,      NOSIRecentWhenInterval60,      LOCRecentWhenInterval60," +
-                    "CBOslopeAllHistory60, WMCslopeAllHistory60, DITslopeAllHistory60, NOCslopeAllHistory60, RFCslopeAllHistory60, LCOMslopeAllHistory60, NOMslopeAllHistory60, NOPMslopeAllHistory60, NOSMslopeAllHistory60, NOFslopeAllHistory60, NOPFslopeAllHistory60, NOSFslopeAllHistory60, NOSIslopeAllHistory60, LOCslopeAllHistory60, " +
-
-                    "CBO90,      WMC90,      DIT90,      NOC90,      RFC90,      LCOM90,      NOM90,      NOPM90,      NOSM90,      NOF90,      NOPF90,      NOSF90,      NOSI90,      LOC90," +
-                    "CBORecentWhenInterval90,      WMCRecentWhenInterval90,      DITRecentWhenInterval90,      NOCRecentWhenInterval90,      RFCRecentWhenInterval90,      LCOMRecentWhenInterval90,      NOMRecentWhenInterval90,      NOPMRecentWhenInterval90,      NOSMRecentWhenInterval90,      NOFRecentWhenInterval90,      NOPFRecentWhenInterval90,      NOSFRecentWhenInterval90,      NOSIRecentWhenInterval90,      LOCRecentWhenInterval90," +
-                    "CBOslopeAllHistory90, WMCslopeAllHistory90, DITslopeAllHistory90, NOCslopeAllHistory90, RFCslopeAllHistory90, LCOMslopeAllHistory90, NOMslopeAllHistory90, NOPMslopeAllHistory90, NOSMslopeAllHistory90, NOFslopeAllHistory90, NOPFslopeAllHistory90, NOSFslopeAllHistory90, NOSIslopeAllHistory90, LOCslopeAllHistory90, " +
-
-                    "CBO120,      WMC120,      DIT120,      NOC120,      RFC120,      LCOM120,      NOM120,      NOPM120,      NOSM120,      NOF120,      NOPF120,      NOSF120,      NOSI120,      LOC120," +
-                    "CBORecentWhenInterval120,      WMCRecentWhenInterval120,      DITRecentWhenInterval120,      NOCRecentWhenInterval120,      RFCRecentWhenInterval120,      LCOMRecentWhenInterval120,      NOMRecentWhenInterval120,      NOPMRecentWhenInterval120,      NOSMRecentWhenInterval120,      NOFRecentWhenInterval120,      NOPFRecentWhenInterval120,      NOSFRecentWhenInterval120,      NOSIRecentWhenInterval120,      LOCRecentWhenInterval120," +
-                    "CBOslopeAllHistory120, WMCslopeAllHistory120, DITslopeAllHistory120, NOCslopeAllHistory120, RFCslopeAllHistory120, LCOMslopeAllHistory120, NOMslopeAllHistory120, NOPMslopeAllHistory120, NOSMslopeAllHistory120, NOFslopeAllHistory120, NOPFslopeAllHistory120, NOSFslopeAllHistory120, NOSIslopeAllHistory120, LOCslopeAllHistory120 "
-
-            );
+            ps.println(data);
         }
 
     }
 
 
+    static void removeFileIfPresent(String fileName) throws IOException {
+        File file = new File(fileName);
+        if (file.exists())
+        {
+            if(file.delete())
+            {
+                System.out.println("file " + fileName + " was rewritten");
+            }
+            else
+            {
+                System.err.println("Error removing old file " + fileName);
+                System.exit(5);
+            }
+        }
+    }
 }

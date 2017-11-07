@@ -7,56 +7,28 @@ import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.LinkedHashMap;
 
-import static pipeline.FileHandler.createFinalFileDataLine;
-import static pipeline.FileHandler.handleFileInCommit;
-import static pipeline.FileHandler.handleFilesInCommits;
-import static pipeline.Git.getNumDaysBtw2Dates;
-import static pipeline.Git.readDateFromLine;
-import static pipeline.Git.retrieveWholeRepoHistory;
-import static pipeline.ResultFileWriter.log;
-import static pipeline.Util.createEmptyFinalResultFiles;
+import static pipeline.FileHandler.addCommitFilesForEverySmellyFile;
+import static pipeline.FileHandler.getAllFilesInFolder;
+import static pipeline.FileHandler.handleAllFiles;
+import static pipeline.Git.getAllCommitIdsAndCreateFileWithSortedIds;
 import static pipeline.Util.createPaths;
-import static pipeline.Util.getResultFileNameFromRepositoryURL;
 
 
-//TODO createOutputFileForEachCommit not redirected console output to file on commit checkout
-// TODO PMD console output is not redirected to file
-// TODO executeCommandsAndReadLinesFromConsole disabled exception handling, because PMD throws exception with code -1
 
+public class WholePipeline {
 
-//TODO save output folder for the repository
-//TODO check slopes calculation
-//TODO
-    /*
-            REQUIREMENTS
+    static ArrayList<String> SMELLY_FILE_NAMES = new ArrayList<>();
 
-        1) only java
-        2) at least 1 year of history
-        3) at least 50 java files
-        4) 5k ELOC
-        5) Popularity: at least 10 starts
-         */
-
-public class WholePipeline
-{
-
-    static String OUTPUT_FOLDER_NAME;
-    static String REPO_NAME;
-    public static File PATH_TO_REPOSITORY;
+    static String REPO_FOLDER_NAME;
     static String REPOSITORY_HISTORY_FILE_PATH;
     static String COMMIT_IDS_FILE_PATH;
-    static String FILE_PATH_TO_LINES_FROM_CONSOLE_ON_COMMITS_CHECKOUT; //not produced TODO
-    static String FILE_PATH_TO_LINES_FROM_CONSOLE_RUNNING_PMD; //not produced TODO
+
+    static ArrayList<String> COMMIT_IDS = new ArrayList<>();
+    static LinkedHashMap<String, Calendar> COMMIT_IDS_WITH_DATES = new LinkedHashMap<>();
 
     static String PATH_TO_SMELLY_FINAL_RESULT_FILE;
     static String PATH_TO_CLEAN_FINAL_RESULT_FILE;
 
-
-    static ArrayList<String> COMMIT_IDS = new ArrayList<>();
-    static LinkedHashMap<String, Calendar> COMMIT_IDS_WITH_DATES = new LinkedHashMap<>();
-    static ArrayList<String> SMELLY_FILE_NAMES = new ArrayList<>();
-
-    
     public static void main(String[] args) throws IOException, InterruptedException, ParseException
     {
         System.err.println("");
@@ -64,30 +36,26 @@ public class WholePipeline
         Util.log();
 
 
-        if (args.length != 1)
-        {
-            log();
-            System.out.println("Usage arguments: <repository url>");
+        if (args.length != 1) {
+            Util.log();
+            System.out.println("Usage argument: <repository folder name>");
             System.exit(1);
         }
 
-        String repositoryURL = args[0].trim();
-        REPO_NAME = getResultFileNameFromRepositoryURL(repositoryURL);
+        String pathToRepositoryFolderWithAllData = args[0];
 
-        createPaths();
+        createPaths(pathToRepositoryFolderWithAllData);
 
-        //Comment if history was already created
-        retrieveWholeRepoHistory(repositoryURL);
-        System.out.println("History files were successfully created for repository: " + REPO_NAME);
+        System.out.println(REPO_FOLDER_NAME);
+        System.out.println(REPOSITORY_HISTORY_FILE_PATH);
+        System.out.println(COMMIT_IDS_FILE_PATH);
 
-        createEmptyFinalResultFiles();
+        getAllCommitIdsAndCreateFileWithSortedIds();
 
-        handleFilesInCommits();
+        File[] allFilesInFolder = getAllFilesInFolder(REPO_FOLDER_NAME.concat("/bad_smell"));
 
+        handleAllFiles(allFilesInFolder);
+        addCommitFilesForEverySmellyFile();
 
     }
-
-
-
-
 }

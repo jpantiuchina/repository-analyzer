@@ -1,7 +1,5 @@
 package pipeline;
 
-import org.apache.commons.io.FileUtils;
-
 import java.io.*;
 import java.nio.charset.Charset;
 import java.text.ParseException;
@@ -12,8 +10,8 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 //import static pipeline.ResultFileWriter.OUTPUT_FOLDER_NAME;
-import static pipeline.FileHandler.createOutputFileForEachCommit;
-import static pipeline.ResultFileWriter.removeFileIfPresent;
+//import static pipeline.FileHandler.createOutputFileForEachCommit;
+import static pipeline.Util.removeFileIfPresent;
 import static pipeline.Util.log;
 import static pipeline.Util.writeLineToFile;
 import static pipeline.WholePipeline.*;
@@ -23,54 +21,30 @@ import static pipeline.WholePipeline.*;
 final class Git
 {
 
-
-    @SuppressWarnings("ResultOfMethodCallIgnored")
-    private static void cloneRepository(String repository) throws IOException, InterruptedException
-    {
-        log();
-        FileUtils.deleteDirectory(PATH_TO_REPOSITORY);
-        new File(PATH_TO_REPOSITORY.toString()).mkdir();
-
-        executeCommandsAndReadLinesFromConsole(new File("."), "git", "clone", "--single-branch", repository, PATH_TO_REPOSITORY.toString());
-    }
-
-
-
-    static void retrieveWholeRepoHistory(String repositoryURL) throws IOException, InterruptedException, ParseException {
-
-        if (!PATH_TO_REPOSITORY.exists())
-        {
-            Git.cloneRepository(repositoryURL);
-        }
-
+    static void getAllCommitIdsAndCreateFileWithSortedIds() throws IOException, InterruptedException, ParseException {
 
         List<String> linesFromConsole = Git.retrieveCommits();
         removeFileIfPresent(REPOSITORY_HISTORY_FILE_PATH);
         for (String line : linesFromConsole)
         {
-            writeLineToFile(line,REPOSITORY_HISTORY_FILE_PATH);
+            writeLineToFile(line, REPOSITORY_HISTORY_FILE_PATH);
         }
 
-        //System.out.println("AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA");
         COMMIT_IDS_WITH_DATES = FileHandler.getAllCommitIdsFromConsoleLines(linesFromConsole);
 
         ArrayList<String> commitIds = new ArrayList<>(COMMIT_IDS_WITH_DATES.keySet());
+
         removeFileIfPresent(COMMIT_IDS_FILE_PATH);
         for (String commit : commitIds)
         {
             writeLineToFile(commit,COMMIT_IDS_FILE_PATH);
             COMMIT_IDS.add(commit);
         }
-
-
-        System.err.println("Creating final result file for each commit");
-        createOutputFileForEachCommit(commitIds);
-
     }
 
     private static ArrayList<String> retrieveCommits() throws IOException, InterruptedException
-    {//log();
-        return executeCommandsAndReadLinesFromConsole(PATH_TO_REPOSITORY, "git", "log", "--reverse", "--pretty=format:%H=%ad=");
+    {
+        return executeCommandsAndReadLinesFromConsole(new File(REPO_FOLDER_NAME), "git", "log","--first-parent", "--reverse", "--pretty=format:%H=%ad=");
     }
 
 
@@ -177,21 +151,6 @@ final class Git
 
         return month;
     }
-
-//    private static boolean has1YearOfHistory(LinkedHashMap<String, Calendar> commitIdsWithDates)
-//    {
-//        String firstID = commitIdsWithDates.keySet().iterator().next();
-//        Calendar firstCommitDate = commitIdsWithDates.get(firstID);
-//        ArrayList<String> commitIds = new ArrayList<String>(commitIdsWithDates.keySet());
-//        String lastCommitID = commitIds.get(commitIdsWithDates.size()-1);
-//        Calendar lastCommitDate = commitIdsWithDates.get(lastCommitID);
-//        // System.out.println("1st commit date: " + firstCommitDate.getTime() + ", last commit date: " + lastCommitDate.getTime() + ", diff: " + getNumDaysBtw2Dates(firstCommitDate, lastCommitDate) );
-//        return getNumDaysBtw2Dates(firstCommitDate, lastCommitDate) >= 364;
-//    }
-
-
-
-
 
 
 }
