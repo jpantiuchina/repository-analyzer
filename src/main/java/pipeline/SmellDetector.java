@@ -1,9 +1,5 @@
 package pipeline;
 
-import java.io.*;
-import java.util.*;
-
-import static pipeline.Util.log;
 //import static pipeline.WholePipeline.FILE_PATH_TO_LINES_FROM_CONSOLE_RUNNING_PMD;
 //import static pipeline.WholePipeline.PATH_TO_REPOSITORY;
 

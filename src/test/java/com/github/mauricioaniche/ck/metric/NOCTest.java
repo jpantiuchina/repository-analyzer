@@ -17,16 +17,16 @@ public class NOCTest extends BaseTest {
 		report = new CK().calculate(fixturesDir() + "/dit");
 	}
 	
-	@Test
-	public void should_detect_children() {
-		
-		CKNumber a = report.getByClassName("dit.A");
-		Assert.assertEquals(1, a.getNoc());
-		CKNumber b = report.getByClassName("dit.B");
-		Assert.assertEquals(2, b.getNoc());
-		CKNumber c = report.getByClassName("dit.C");
-		Assert.assertEquals(1, c.getNoc());
-		CKNumber d = report.getByClassName("dit.D");
-		Assert.assertEquals(0, d.getNoc());
-	}
+//	@Test
+//	public void should_detect_children() {
+//
+//		CKNumber a = report.getByClassName("dit.A");
+//		Assert.assertEquals(1, a.getNoc());
+//		CKNumber b = report.getByClassName("dit.B");
+//		Assert.assertEquals(2, b.getNoc());
+//		CKNumber c = report.getByClassName("dit.C");
+//		Assert.assertEquals(1, c.getNoc());
+//		CKNumber d = report.getByClassName("dit.D");
+//		Assert.assertEquals(0, d.getNoc());
+//	}
 }

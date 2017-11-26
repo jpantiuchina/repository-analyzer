@@ -55,10 +55,10 @@ class SlopeCalculation
 
         double stddevX = getStandardDeviation(xCommits);
         double stddevY = getStandardDeviation(yMetricValues);
-        double corr    = getCorrelation(xCommits, yMetricValues);
-        double slope   = getSlope(stddevX, stddevY, corr);
+        double corr = getCorrelation(xCommits, yMetricValues);
+        double slope = getSlope(stddevX, stddevY, corr);
         //round slope
-        slope = (double)Math.round(slope * ROUND_DECIMAL) / ROUND_DECIMAL;
+        slope = (double) Math.round(slope * ROUND_DECIMAL) / ROUND_DECIMAL;
         return slope;
     }
 
