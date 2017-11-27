@@ -12,7 +12,7 @@ import java.util.regex.Pattern;
 import static java.lang.Boolean.parseBoolean;
 import static java.lang.Double.parseDouble;
 import static java.lang.Long.parseLong;
-import static pipeline.FileData.*;
+import static pipeline.JavaFile.*;
 import static pipeline.Git.executeCommandsAndReadLinesFromConsole;
 import static pipeline.Git.readDateFromLine;
 import static pipeline.SlopeCalculation.getSlopeForFileMetric;
@@ -53,18 +53,18 @@ class FileHandler
     }
 
 
-    private static HashMap<FileData, String> getCommitIdOfPreviousEdit(String fileName, String currentCommitId)
+    private static HashMap<JavaFile, String> getCommitIdOfPreviousEdit(String fileName, String currentCommitId)
     {
-        HashMap<FileData, String> fileDataAndCommitId = new HashMap<>();
+        HashMap<JavaFile, String> fileDataAndCommitId = new HashMap<>();
         int count = COMMIT_IDS.indexOf(currentCommitId);
 
-        FileData fileData = allFilesData.get(0);
+        JavaFile javaFile = allFilesData.get(0);
 
-        for (FileData fd : allFilesData)
+        for (JavaFile fd : allFilesData)
         {
             if (fd.fileNamePath.equals(fileName))
             {
-                ArrayList<FileCommitData> fileCommitDataList = fd.fileCommitDataArrayList;
+                ArrayList<Commit> fileCommitDataList = fd.fileCommitArrayList;
 
                 for (int i = fileCommitDataList.size() - 1; i >= 0; i--)
                 {
@@ -76,7 +76,7 @@ class FileHandler
                         return fileDataAndCommitId;
                     }
                 }
-                fileDataAndCommitId.put(fileData, currentCommitId);
+                fileDataAndCommitId.put(javaFile, currentCommitId);
                 return fileDataAndCommitId; //not found, first commit
             }
         }
@@ -113,10 +113,10 @@ class FileHandler
                     {
                         if (getCommitIdOfPreviousEdit(cleanFileName, futureCommitIdSmelly) != null)
                         {
-                            HashMap<FileData, String> fileDataAndCommitIdOfPreviousEdit = getCommitIdOfPreviousEdit(cleanFileName, futureCommitIdSmelly);
+                            HashMap<JavaFile, String> fileDataAndCommitIdOfPreviousEdit = getCommitIdOfPreviousEdit(cleanFileName, futureCommitIdSmelly);
 
                             assert fileDataAndCommitIdOfPreviousEdit != null;
-                            FileData fd = fileDataAndCommitIdOfPreviousEdit.keySet().iterator().next();
+                            JavaFile fd = fileDataAndCommitIdOfPreviousEdit.keySet().iterator().next();
                             String commitId = fileDataAndCommitIdOfPreviousEdit.get(fd);
 
                             composeLineAndWriteToFile(fd, commitId, futureCommitIdSmelly, PATH_TO_CLEAN_FINAL_RESULT_FILE);
@@ -157,14 +157,14 @@ class FileHandler
     }
 
 
-    private static String getCommitIdWhenFileBecomeSmelly(FileData fd) throws IOException
+    private static String getCommitIdWhenFileBecomeSmelly(JavaFile fd) throws IOException
     {
 
         String commitId = "";
 
-        ArrayList<FileData.FileCommitData> fileCommitData = fd.fileCommitDataArrayList;
+        ArrayList<Commit> fileCommitData = fd.fileCommitArrayList;
 
-        for (FileData.FileCommitData fc : fileCommitData)
+        for (Commit fc : fileCommitData)
         {
             if (fc.isFileSmelly && commitId.equals("")) //get first time
             {
@@ -183,7 +183,7 @@ class FileHandler
     }
 
 
-    private static FileData parseFileWithItsData(String filePath) throws IOException
+    private static JavaFile parseFileWithItsData(String filePath) throws IOException
     {
 
         String fileData = filePath.replaceAll("^.*/", ""); //removes path
@@ -197,14 +197,14 @@ class FileHandler
             smellType = matcher.group(1).replaceAll("_", "");
         }
 
-        return new FileData(fileName, isFileSmelly(fileData), isBlob(smellType), isCDSBP(smellType), isComplexClass(smellType), isFuncDec(smellType), isSpaghCode(smellType), readAllDataInFileAndGetArraylistOfFileCommitDataObjects(filePath));
+        return new JavaFile(fileName, isFileSmelly(fileData), isBlob(smellType), isCDSBP(smellType), isComplexClass(smellType), isFuncDec(smellType), isSpaghCode(smellType), readAllDataInFileAndGetArraylistOfFileCommitDataObjects(filePath));
     }
 
 
-    private static ArrayList<FileData.FileCommitData> readAllDataInFileAndGetArraylistOfFileCommitDataObjects(String inputFile) throws IOException
+    private static ArrayList<Commit> readAllDataInFileAndGetArraylistOfFileCommitDataObjects(String inputFile) throws IOException
     {
 
-        ArrayList<FileData.FileCommitData> fileCommitDataArrayList = new ArrayList<>();
+        ArrayList<Commit> fileCommitDataArrayList = new ArrayList<>();
         try (BufferedReader br = new BufferedReader(new FileReader(inputFile)))
         {
             String line;
@@ -236,7 +236,7 @@ class FileHandler
                     COMMIT_IDS_WITH_DATES.put(commitId, commitTime);
                 }
 
-                FileData.FileCommitData fileCommitData = new FileData.FileCommitData(isFileSmelly, commitId, count, commitTime, loc, lcom, wmc, rfc, cbo, nom, noa, dit, noc);
+                Commit fileCommitData = new Commit(isFileSmelly, commitId, count, commitTime, loc, lcom, wmc, rfc, cbo, nom, noa, dit, noc);
 
                 fileCommitDataArrayList.add(fileCommitData);
                 count++;
@@ -251,10 +251,10 @@ class FileHandler
         return new File(folder).listFiles();
     }
 
-    private static ArrayList<Double> getFileSlopesForMetricsBetween2Commits(FileData fd, FileCommitData beginFileDataIncluding, FileCommitData lastCommitDataExcluding) throws IOException
+    private static ArrayList<Double> getFileSlopesForMetricsBetween2Commits(JavaFile fd, Commit beginFileDataIncluding, Commit lastCommitDataExcluding) throws IOException
     {
 
-        ArrayList<FileCommitData> slopeCommitsData = getAllCommitsDataInBetween(fd, beginFileDataIncluding, lastCommitDataExcluding);
+        ArrayList<Commit> slopeCommitsData = getAllCommitsDataInBetween(fd, beginFileDataIncluding, lastCommitDataExcluding);
 
         ArrayList<Double> slopes = null;
 
@@ -263,7 +263,7 @@ class FileHandler
 
             ArrayList<ArrayList<Double>> metricsForCommitsInBetween = new ArrayList<>();
 
-            for (FileCommitData slopeCommitData : slopeCommitsData)
+            for (Commit slopeCommitData : slopeCommitsData)
             {
                 metricsForCommitsInBetween.add(getMetricsOfFileCommitData(slopeCommitData));
             }
@@ -286,7 +286,7 @@ class FileHandler
 
     private static void handleFileAndAddFinalFileDataLines(File filePath) throws IOException, ParseException
     {
-        FileData fd = parseFileWithItsData(filePath.toString());
+        JavaFile fd = parseFileWithItsData(filePath.toString());
 
         allFilesData.add(fd);
 
@@ -299,6 +299,7 @@ class FileHandler
                 SMELLY_CSV_FILE_NAMES.add(fd.fileNamePath);
             }
             String futureCommitIdWhenFileBecameSmelly = getCommitIdWhenFileBecomeSmelly(fd);
+
 
             composeLineAndWriteToFile(fd, futureCommitIdWhenFileBecameSmelly, "", PATH_TO_SMELLY_FINAL_RESULT_FILE);
         }
@@ -319,7 +320,7 @@ class FileHandler
     }
 
 
-    private static void composeLineAndWriteToFile(FileData fd, String futureCommitId, String subsituteFutureCommitId, String outputFilePath) throws IOException, ParseException
+    private static void composeLineAndWriteToFile(JavaFile fd, String futureCommitId, String subsituteFutureCommitId, String outputFilePath) throws IOException, ParseException
     {
 
         String uniqueString = makeUniqueString(fd.fileNamePath, futureCommitId, subsituteFutureCommitId);
@@ -330,6 +331,11 @@ class FileHandler
 
             if (!lineNumericalData.isEmpty())
             {
+                if (!CREATED)
+                {
+                    createEmptyFinalResultFiles();
+
+                }
                 if (!subsituteFutureCommitId.isEmpty())
                 {
                     futureCommitId = subsituteFutureCommitId;
@@ -337,6 +343,9 @@ class FileHandler
                 String finalLine = String.valueOf(new StringBuilder(fd.fileNamePath).append(",").
                         append(futureCommitId).append(",").
                         append(lineNumericalData));
+
+                CREATED = true;
+
                 writeLineToFile(finalLine, outputFilePath);
             }
             uniquePairs.add(uniqueString);
@@ -345,7 +354,7 @@ class FileHandler
     }
 
 
-    private static FileCommitData getMetricsCommitData(FileData fd, String futureCommitId, int interval) throws ParseException
+    private static Commit getMetricsCommitData(JavaFile fd, String futureCommitId, int interval) throws ParseException
     {
         Calendar timeFutureCommit = COMMIT_IDS_WITH_DATES.get(futureCommitId);
         //System.out.println(timeFutureCommit);
@@ -355,14 +364,14 @@ class FileHandler
         int commitCountBeforeNInterval = futureCommitCount - interval;
 
 
-        ArrayList<FileData.FileCommitData> fileCommitDataArrayList = fd.fileCommitDataArrayList;
+        ArrayList<Commit> fileCommitDataArrayList = fd.fileCommitArrayList;
 
         int i = fileCommitDataArrayList.size();
 
         while (i > 0 && commitCountBeforeNInterval > 2)
         {
             i--;
-            FileCommitData fileCommitData = fileCommitDataArrayList.get(i);
+            Commit fileCommitData = fileCommitDataArrayList.get(i);
             Calendar metricsCommitTime = fileCommitData.time;
             int count = fileCommitData.commitCount;
 
@@ -385,10 +394,10 @@ class FileHandler
         return null;
     }
 
-    private static FileCommitData getRecentFileCommitData(FileData fd, FileCommitData metricsFileCommitData)
+    private static Commit getRecentFileCommitData(JavaFile fd, Commit metricsFileCommitData)
     {
         int recentCommitCount = 0;
-        ArrayList<FileData.FileCommitData> fileCommitDataArrayList = fd.fileCommitDataArrayList;
+        ArrayList<Commit> fileCommitDataArrayList = fd.fileCommitArrayList;
         int metricsCommitCount = getCountOfFileCommitData(fd, metricsFileCommitData);
         if (2 <= metricsCommitCount && metricsCommitCount < 10)
         {
@@ -409,14 +418,14 @@ class FileHandler
 
     }
 
-    private static int getCountOfFileCommitData(FileData fd, FileCommitData fileCommitData)
+    private static int getCountOfFileCommitData(JavaFile fd, Commit fileCommitData)
     {
-        ArrayList<FileData.FileCommitData> fileCommitDataArrayList = fd.fileCommitDataArrayList;
+        ArrayList<Commit> fileCommitDataArrayList = fd.fileCommitArrayList;
         return fileCommitDataArrayList.indexOf(fileCommitData);
     }
 
 
-    private static ArrayList<Double> getMetricsOfFileCommitData(FileCommitData fileCommitData) throws IOException
+    private static ArrayList<Double> getMetricsOfFileCommitData(Commit fileCommitData) throws IOException
     {
         @SuppressWarnings("UnnecessaryLocalVariable") ArrayList<Double> metrics = new ArrayList<>(Arrays.asList(fileCommitData.loc, fileCommitData.lcom, fileCommitData.wmc, fileCommitData.rfc, fileCommitData.cbo, fileCommitData.nom, fileCommitData.noa, fileCommitData.dit, fileCommitData.noc));
 
@@ -424,7 +433,7 @@ class FileHandler
     }
 
 
-    private static String createFinalLineWithSlopesData(FileData fd, String futureCommitId) throws IOException, ParseException
+    private static String createFinalLineWithSlopesData(JavaFile fd, String futureCommitId) throws IOException, ParseException
     {
 
         int currentCount = STEP;
@@ -436,7 +445,7 @@ class FileHandler
 
         while (currentCount <= MAX_INT_DAYS_OR_COMMITS)
         {
-            FileCommitData metricsFileCommitData = getMetricsCommitData(fd, futureCommitId, currentCount);
+            Commit metricsFileCommitData = getMetricsCommitData(fd, futureCommitId, currentCount);
 
             if (metricsFileCommitData == null && currentCount == STEP) // metrics commit not found for the smallest interval
             {
@@ -451,11 +460,11 @@ class FileHandler
                 }
             } else if (metricsFileCommitData != null)//slopes can be calculated for this interval
             {
-                FileCommitData recentFileCommitData = getRecentFileCommitData(fd, metricsFileCommitData);
+                Commit recentFileCommitData = getRecentFileCommitData(fd, metricsFileCommitData);
 
                 ArrayList<Double> metrics = getMetricsOfFileCommitData(metricsFileCommitData);
 
-                FileCommitData firstFileCommitData = (FileCommitData) fd.fileCommitDataArrayList.get(0);
+                Commit firstFileCommitData = (Commit) fd.fileCommitArrayList.get(0);
 
                 ArrayList<Double> slopesHistory = getFileSlopesForMetricsBetween2Commits(fd, firstFileCommitData, metricsFileCommitData);
 
@@ -573,7 +582,7 @@ class FileHandler
     }
 
 
-    private static ArrayList<String> getSmellsForFileInCommit(FileData fd) throws IOException
+    private static ArrayList<String> getSmellsForFileInCommit(JavaFile fd) throws IOException
     {
         ArrayList<String> smells = new ArrayList<>();
 
@@ -594,15 +603,15 @@ class FileHandler
     }
 
 
-    private static ArrayList<FileCommitData> getAllCommitsDataInBetween(FileData fd, FileCommitData pastFileCommitData, FileCommitData currentFileCommitData)
+    private static ArrayList<Commit> getAllCommitsDataInBetween(JavaFile fd, Commit pastFileCommitData, Commit currentFileCommitData)
     {
-        ArrayList<FileCommitData> commitsDataInBetween = new ArrayList<>();
+        ArrayList<Commit> commitsDataInBetween = new ArrayList<>();
         int indexPast = getCountOfFileCommitData(fd, pastFileCommitData);
         int indexCurrent = getCountOfFileCommitData(fd, currentFileCommitData);
 
         for (int i = indexPast; i < indexCurrent; i++)
         {
-            ArrayList<FileCommitData> fileCommitDataArrayList = fd.fileCommitDataArrayList;
+            ArrayList<Commit> fileCommitDataArrayList = fd.fileCommitArrayList;
             commitsDataInBetween.add(fileCommitDataArrayList.get(i));
         }
         return commitsDataInBetween;
