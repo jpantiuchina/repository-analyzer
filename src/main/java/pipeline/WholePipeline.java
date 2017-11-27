@@ -71,17 +71,18 @@ public class WholePipeline
         addCommitFilesForEverySmellyFile();
 
         File smellyFile = new File(PATH_TO_SMELLY_FINAL_RESULT_FILE);
+        File cleanFile = new File(PATH_TO_CLEAN_FINAL_RESULT_FILE);
 
-        if(isFileEmpty(smellyFile))
+        if(isFileEmpty(smellyFile) || isFileEmpty(cleanFile) )
         {
            boolean removedSmelly = smellyFile.delete();
-            File cleanFile = new File(PATH_TO_CLEAN_FINAL_RESULT_FILE);
-            boolean removedClean = cleanFile.delete();
-            if (removedSmelly && removedClean)
-            {
-                System.out.println("No Smelly Files found for this repository");
-                System.out.println();
-            }
+           boolean removedClean = cleanFile.delete();
+
+           if (removedSmelly && removedClean)
+           {
+               System.out.println("No 'Smelly' Or 'Clean' Files found with needed minimum survival for repository: " + REPO_FOLDER_NAME );
+               System.out.println();
+           }
         }
 
     }

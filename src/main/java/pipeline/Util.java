@@ -78,7 +78,8 @@ class Util
         int count = 0;
         try (BufferedReader br = new BufferedReader(new FileReader(inputFile)))
         {
-            while (br.readLine() != null)
+            String line;
+            while ((line = br.readLine()) != null && !line.trim().isEmpty())
             {
                 count++;
             }
@@ -86,22 +87,18 @@ class Util
         return count < 2;
     }
 
-/*
-   static int MAX_INT_DAYS_OR_COMMITS = 120;
-    static boolean IS_PREDICTION_IN_DAYS = true;
-    static int STEP = 15;
- */
+
 
     private static void createEmptyFinalResultFiles() throws IOException
     {
         StringBuilder headerLine = new StringBuilder();
         int currentInterval = STEP;
 
-        headerLine.append("filename,futureCommitId,");
+        headerLine.append("filename,futureCommitId");
 
         while (currentInterval <= MAX_INT_DAYS_OR_COMMITS)
         {
-            headerLine.append("metricsCommitId").append(currentInterval).append(",");
+            headerLine.append(",metricsCommitId").append(currentInterval).append(",");
 
             headerLine.append("LOC").append(currentInterval).append(",");
             headerLine.append("LCOM").append(currentInterval).append(",");
@@ -131,20 +128,20 @@ class Util
             headerLine.append("NOMhist").append(currentInterval).append(",");
             headerLine.append("NOAhist").append(currentInterval).append(",");
             headerLine.append("DIThist").append(currentInterval).append(",");
-            headerLine.append("NOChist").append(currentInterval).append(",");
+            headerLine.append("NOChist").append(currentInterval);
 
             currentInterval = currentInterval + STEP;
 
         }
 
-        String smells = "isBlob, isCDSBP, isComplexClass, isFuncDec, isSpaghCode";
 
-
+        String cleanHeaderLine = headerLine.toString().replaceAll(",$", "");
         try (PrintStream ps = new PrintStream(PATH_TO_CLEAN_FINAL_RESULT_FILE))
         {
-            ps.println(headerLine);
+            ps.println(cleanHeaderLine);
         }
 
+        String smells = ",isBlob, isCDSBP, isComplexClass, isFuncDec, isSpaghCode";
         try (PrintStream ps = new PrintStream(PATH_TO_SMELLY_FINAL_RESULT_FILE))
         {
             ps.println(headerLine.append(smells));

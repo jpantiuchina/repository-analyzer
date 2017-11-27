@@ -290,10 +290,14 @@ class FileHandler
 
         allFilesData.add(fd);
 
+        //System.out.println(fd.fileNamePath);
+
         if (fd.becomeSmelly) //smelly file, read only one line when file became smelly
         {
-            SMELLY_CSV_FILE_NAMES.add(fd.fileNamePath);
-
+            if (!SMELLY_CSV_FILE_NAMES.contains(fd.fileNamePath))
+            {
+                SMELLY_CSV_FILE_NAMES.add(fd.fileNamePath);
+            }
             String futureCommitIdWhenFileBecameSmelly = getCommitIdWhenFileBecomeSmelly(fd);
 
             composeLineAndWriteToFile(fd, futureCommitIdWhenFileBecameSmelly, "", PATH_TO_SMELLY_FINAL_RESULT_FILE);
@@ -320,7 +324,7 @@ class FileHandler
 
         String uniqueString = makeUniqueString(fd.fileNamePath, futureCommitId, subsituteFutureCommitId);
 
-        if (!uniquePairs.contains(uniqueString))
+        if (!uniquePairs.contains(uniqueString) || fd.becomeSmelly)  //add all for smelly
         {
             String lineNumericalData = createFinalLineWithSlopesData(fd, futureCommitId);
 
