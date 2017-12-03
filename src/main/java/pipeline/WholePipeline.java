@@ -19,6 +19,7 @@ public class WholePipeline
 {
 
     static ArrayList<String> SMELLY_CSV_FILE_NAMES = new ArrayList<>();
+    static ArrayList<String> CLEAN_CSV_FILE_NAMES = new ArrayList<>();
 
     static String REPO_FOLDER_NAME;
     static String REPOSITORY_HISTORY_FILE_PATH;
@@ -66,24 +67,24 @@ public class WholePipeline
 
         File[] allFilesInFolder = getAllFilesInFolder(REPO_FOLDER_NAME.concat("/bad_smell"));
 
-        handleAllFiles(allFilesInFolder);
+        handleAllCleanFiles(allFilesInFolder);
 
         addCommitFilesForEverySmellyFile();
 
         File smellyFile = new File(PATH_TO_SMELLY_FINAL_RESULT_FILE);
         File cleanFile = new File(PATH_TO_CLEAN_FINAL_RESULT_FILE);
 
-        if(isFileEmpty(smellyFile) || isFileEmpty(cleanFile) )
-        {
-           boolean removedSmelly = smellyFile.delete();
-           boolean removedClean = cleanFile.delete();
-
-           if (removedSmelly && removedClean)
-           {
-               System.out.println("No 'Smelly' Or 'Clean' Files found with needed minimum survival for repository: " + REPO_FOLDER_NAME );
-               System.out.println();
-           }
-        }
+//        if(isFileEmpty(smellyFile) || isFileEmpty(cleanFile) )
+//        {
+//           boolean removedSmelly = smellyFile.delete();
+//           boolean removedClean = cleanFile.delete();
+//
+//           if (removedSmelly && removedClean)
+//           {
+//               System.out.println("No 'Smelly' Or 'Clean' Files found with needed minimum survival for repository: " + REPO_FOLDER_NAME );
+//               System.out.println();
+//           }
+//        }
 
     }
 }

@@ -24,7 +24,7 @@ import static pipeline.WholePipeline.*;
 class FileHandler
 {
 
-    static void handleAllFiles(File[] allFiles) throws IOException, ParseException
+    static void handleAllCleanFiles(File[] allFiles) throws IOException, ParseException
     {
         if (allFiles != null)
         {
@@ -102,10 +102,10 @@ class FileHandler
 
                 //to get the system's snapshots, we need all smelly files in final cleanFolder file except smelly files
 
-                ArrayList<String> fileNamesInCommit = getAllFileNamesPresentInCommitId(futureCommitIdSmelly); //git show will return all smelly and clean files
-
+                ArrayList<String> allFileNamesInCommit = getAllFileNamesPresentInCommitId(futureCommitIdSmelly); //git show will return all smelly and clean files
+  //              System.out.println(allFileNamesInCommit);
                 //check if file is not present in the list of smelly file names
-                ArrayList<String> cleanFileNames = getOnlyCleanFileNames(fileNamesInCommit);
+                ArrayList<String> cleanFileNames = getOnlyCleanFileNames(allFileNamesInCommit);
 
                 if (!cleanFileNames.isEmpty())
                 {
@@ -127,6 +127,30 @@ class FileHandler
         }
     }
 
+
+    private static String getFileNameAsInFileButNotGitShow(String fileNameInGitShow)
+    {
+
+        for (String cleanFile :CLEAN_CSV_FILE_NAMES)
+        {
+            if (cleanFile.contains(fileNameInGitShow) || fileNameInGitShow.contains(cleanFile))
+            {
+                return cleanFile;
+            }
+        }
+
+        for (String smellyFile: SMELLY_CSV_FILE_NAMES)
+        {
+            if (smellyFile.contains(fileNameInGitShow) || fileNameInGitShow.contains(smellyFile))
+            {
+                return smellyFile;
+            }
+        }
+
+        return "";
+    }
+
+
     private static String makeFileNameFromAbsolutePath(String fileName)
     {
         return fileName.replaceAll("^.*.java.", "");
@@ -147,7 +171,14 @@ class FileHandler
 
                 // System.out.println(fileName);
                 fileName = makeFileNameFromAbsolutePath(fileName);
-                fileNames.add(fileName);
+
+                fileName = getFileNameAsInFileButNotGitShow(fileName);
+                if (!fileName.isEmpty())
+                {
+                    fileNames.add(fileName);
+
+                }
+
                 //System.out.println("Added file:" + fileName);
             }
         }
@@ -301,6 +332,10 @@ class FileHandler
             String futureCommitIdWhenFileBecameSmelly = getCommitIdWhenFileBecomeSmelly(fd);
 
             composeLineAndWriteToFile(fd, futureCommitIdWhenFileBecameSmelly, "", PATH_TO_SMELLY_FINAL_RESULT_FILE);
+        }
+        else
+        {
+            CLEAN_CSV_FILE_NAMES.add(fd.fileNamePath);
         }
 
     }
