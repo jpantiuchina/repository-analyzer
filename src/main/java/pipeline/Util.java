@@ -60,8 +60,6 @@ class Util
         removeFileIfPresent(PATH_TO_SMELLY_FINAL_RESULT_FILE);
         removeFileIfPresent(PATH_TO_CLEAN_FINAL_RESULT_FILE);
 
-        createEmptyFinalResultFiles();
-
     }
 
 
@@ -89,7 +87,7 @@ class Util
 
 
 
-    private static void createEmptyFinalResultFiles() throws IOException
+    static void createEmptyFinalResultFiles() throws IOException
     {
         StringBuilder headerLine = new StringBuilder();
         int currentInterval = STEP;
