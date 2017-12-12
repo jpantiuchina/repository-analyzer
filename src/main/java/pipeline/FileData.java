@@ -7,17 +7,18 @@ class FileData
 {
 
     String fileNamePath = "";
-    boolean becomeSmelly = false;
+    boolean willEverBecomeSmelly = false;
     boolean isBlob = false;
     boolean isCDSBP = false;
     boolean isComplexClass = false;
     boolean isFuncDec = false;
     boolean isSpaghCode = false;
     ArrayList fileCommitDataArrayList = new ArrayList();
-    FileData(String fileNamePath, boolean becomeSmelly, boolean isBlob, boolean isCDSBP, boolean isComplexClass, boolean isFuncDec, boolean isSpaghCode, ArrayList<FileCommitData> fileCommitDataArrayList)
+
+    FileData(String fileNamePath, boolean willEverBecomeSmelly, boolean isBlob, boolean isCDSBP, boolean isComplexClass, boolean isFuncDec, boolean isSpaghCode, ArrayList<FileCommitData> fileCommitDataArrayList)
     {
         this.fileNamePath = fileNamePath;
-        this.becomeSmelly = becomeSmelly;
+        this.willEverBecomeSmelly = willEverBecomeSmelly;
         this.isBlob = isBlob;
         this.isCDSBP = isCDSBP;
         this.isComplexClass = isComplexClass;
@@ -59,7 +60,6 @@ class FileData
     static class FileCommitData
     {
         boolean isFileSmelly = false;
-
         double loc;
         double lcom;
         double wmc;// = 0;

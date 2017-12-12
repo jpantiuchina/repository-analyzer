@@ -61,6 +61,7 @@ class Util
         removeFileIfPresent(PATH_TO_CLEAN_FINAL_RESULT_FILE);
 
         createEmptyFinalResultFiles();
+        //createEmptyFinalResultCleanFile();
 
     }
 
@@ -73,7 +74,7 @@ class Util
     }
 
 
-    static boolean isFileEmpty(File inputFile) throws IOException
+    private static boolean isFileEmpty(File inputFile) throws IOException
     {
         int count = 0;
         try (BufferedReader br = new BufferedReader(new FileReader(inputFile)))
@@ -88,17 +89,84 @@ class Util
     }
 
 
+    static void removeEmptyFiles() throws IOException
+    {
+        File smellyFile = new File(PATH_TO_SMELLY_FINAL_RESULT_FILE);
+        File cleanFile = new File(PATH_TO_CLEAN_FINAL_RESULT_FILE);
+
+        if(isFileEmpty(smellyFile) || isFileEmpty(cleanFile) )
+        {
+            boolean removedSmelly = smellyFile.delete();
+            boolean removedClean = cleanFile.delete();
+
+            if (removedSmelly && removedClean)
+            {
+                System.out.println("No 'Smelly' Or 'Clean' Files found with needed minimum survival for repository: " + REPO_FOLDER_NAME );
+                System.out.println();
+            }
+        }
+    }
+
+
+    private static void createEmptyFinalResultCleanFile() throws IOException
+    {
+        @SuppressWarnings("StringBufferReplaceableByString")
+        StringBuilder headerLine = new StringBuilder();
+
+        headerLine.append("filename, commitId, step,");
+
+            headerLine.append("LOC").append(",");
+            headerLine.append("LCOM").append(",");
+            headerLine.append("WMC").append(",");
+            headerLine.append("RFC").append(",");
+            headerLine.append("CBO").append(",");
+            headerLine.append("NOM").append(",");
+            headerLine.append("NOA").append(",");
+            headerLine.append("DIT").append(",");
+            headerLine.append("NOC").append(",");
+
+            headerLine.append("LOCrecent").append(",");
+            headerLine.append("LCOMrecent").append(",");
+            headerLine.append("WMCrecent").append(",");
+            headerLine.append("RFCrecent").append(",");
+            headerLine.append("CBOrecent").append(",");
+            headerLine.append("NOMrecent").append(",");
+            headerLine.append("NOArecent").append(",");
+            headerLine.append("DITrecent").append(",");
+            headerLine.append("NOCrecent").append(",");
+
+            headerLine.append("LOChist").append(",");
+            headerLine.append("LCOMhist").append(",");
+            headerLine.append("WMChist").append(",");
+            headerLine.append("RFChist").append(",");
+            headerLine.append("CBOhist").append(",");
+            headerLine.append("NOMhist").append(",");
+            headerLine.append("NOAhist").append(",");
+            headerLine.append("DIThist").append(",");
+            headerLine.append("NOChist");
+
+
+        String cleanHeaderLine = headerLine.toString().replaceAll(",$", "");
+        try (PrintStream ps = new PrintStream(PATH_TO_CLEAN_FINAL_RESULT_FILE))
+        {
+            ps.println(cleanHeaderLine);
+        }
+
+    }
 
     private static void createEmptyFinalResultFiles() throws IOException
     {
         StringBuilder headerLine = new StringBuilder();
         int currentInterval = STEP;
 
-        headerLine.append("filename,futureCommitId");
+        headerLine.append("filename, IsSmellyInCommitId");
 
         while (currentInterval <= MAX_INT_DAYS_OR_COMMITS)
         {
             headerLine.append(",metricsCommitId").append(currentInterval).append(",");
+
+            headerLine.append("predictAfterRandomNBetween1And").append(currentInterval).append(",");
+            headerLine.append("predictionCommitIdAfter").append(currentInterval).append(",");
 
             headerLine.append("LOC").append(currentInterval).append(",");
             headerLine.append("LCOM").append(currentInterval).append(",");
@@ -134,18 +202,13 @@ class Util
 
         }
 
-
-        String cleanHeaderLine = headerLine.toString().replaceAll(",$", "");
-        try (PrintStream ps = new PrintStream(PATH_TO_CLEAN_FINAL_RESULT_FILE))
-        {
-            ps.println(cleanHeaderLine);
-        }
-
         String smells = ",isBlob, isCDSBP, isComplexClass, isFuncDec, isSpaghCode";
         try (PrintStream ps = new PrintStream(PATH_TO_SMELLY_FINAL_RESULT_FILE))
         {
             ps.println(headerLine.append(smells));
         }
+
+        createEmptyFinalResultCleanFile();
 
     }
 

@@ -47,7 +47,7 @@ final class Git
     private static ArrayList<String> retrieveCommits() throws IOException, InterruptedException
     {
         //        return executeCommandsAndReadLinesFromConsole(new File(REPO_FOLDER_NAME), "git", "log", "--first-parent", "--reverse", "--pretty=format:%H=%ad=");
-        return executeCommandsAndReadLinesFromConsole(new File(REPO_FOLDER_NAME), "git", "log",  "--reverse", "--pretty=format:%H=%ad=");
+        return executeCommandsAndReadLinesFromConsole(new File(REPO_FOLDER_NAME), "git", "log", "--reverse", "--pretty=format:%H=%ad=");
     }
 
 
