@@ -3,29 +3,29 @@ package pipeline;
 import java.io.File;
 import java.io.IOException;
 import java.text.ParseException;
-import java.util.ArrayList;
-import java.util.Calendar;
-import java.util.LinkedHashMap;
+import java.util.*;
 
 import static java.lang.Boolean.parseBoolean;
 import static java.lang.Integer.parseInt;
 import static pipeline.FileHandler.*;
 import static pipeline.Git.getAllCommitIdsAndCreateFileWithSortedIds;
-import static pipeline.Util.createPaths;
-import static pipeline.Util.removeEmptyFiles;
+import static pipeline.Git.sortCommits;
+import static pipeline.Util.*;
 
 
 public class WholePipeline
 {
 
-    static ArrayList<String> SMELLY_CSV_FILE_NAMES = new ArrayList<>();
-    static ArrayList<String> CLEAN_CSV_FILE_NAMES = new ArrayList<>();
+    static ArrayList<String> CSV_FILE_NAMES = new ArrayList<>();
+    //static ArrayList<String> CLEAN_CSV_FILE_NAMES = new ArrayList<>();
 
     static String REPO_FOLDER_NAME;
     static String REPOSITORY_HISTORY_FILE_PATH;
     static String COMMIT_IDS_FILE_PATH;
 
-    static ArrayList<String> COMMIT_IDS = new ArrayList<>();
+    static ArrayList<String> COMMIT_INDEX_TO_COMMIT_ID = new ArrayList<>();
+    static Map<String, Integer> COMMIT_ID_TO_COMMIT_INDEX = new HashMap<>();
+
     static LinkedHashMap<String, Calendar> COMMIT_IDS_WITH_DATES = new LinkedHashMap<>();
 
     static String PATH_TO_SMELLY_FINAL_RESULT_FILE;
@@ -65,13 +65,35 @@ public class WholePipeline
 
         getAllCommitIdsAndCreateFileWithSortedIds();
 
+
         File[] allFilesInFolder = getAllFilesInFolder(REPO_FOLDER_NAME.concat("/bad_smell"));
 
         handleAllFilesForRepo(allFilesInFolder);
 
+        sortCommits();
+
+
+        removeFileIfPresent(COMMIT_IDS_FILE_PATH);
+
+        for (String commit : COMMIT_IDS_WITH_DATES.keySet())
+        {
+            writeLineToFile(commit, COMMIT_IDS_FILE_PATH);
+            COMMIT_INDEX_TO_COMMIT_ID.add(commit);
+            COMMIT_ID_TO_COMMIT_INDEX.put(commit, COMMIT_INDEX_TO_COMMIT_ID.size() - 1);
+//            System.out.println(commit + " => " + (COMMIT_INDEX_TO_COMMIT_ID.size() - 1));
+        }
+
+
+        System.out.println("#Commits in repository: " + COMMIT_INDEX_TO_COMMIT_ID.size());
+        System.out.println("Processing commits...");
+
+        handleSmellyFiles();
         addCleanFilesForEverySmellyFileInCommit();
 
         removeEmptyFiles();
+
+        System.out.println("----------------------------------------------------------------");
+
 
     }
 }

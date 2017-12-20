@@ -7,10 +7,7 @@ import java.io.InputStreamReader;
 import java.nio.charset.Charset;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
-import java.util.ArrayList;
-import java.util.Calendar;
-import java.util.Date;
-import java.util.List;
+import java.util.*;
 import java.util.concurrent.TimeUnit;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -20,6 +17,45 @@ import static pipeline.WholePipeline.*;
 
 final class Git
 {
+
+    static void sortCommits()
+    {
+        ArrayList<Map.Entry<String, Calendar>> entries = new ArrayList<>(COMMIT_IDS_WITH_DATES.entrySet());
+
+        entries.sort(Map.Entry.comparingByValue());
+
+        COMMIT_IDS_WITH_DATES.clear();
+
+        for (Map.Entry<String, Calendar> entry : entries)
+        {
+            COMMIT_IDS_WITH_DATES.put(entry.getKey(), entry.getValue());
+        }
+
+
+//        ArrayList<String> commitIds = new ArrayList<>(COMMIT_IDS_WITH_DATES.keySet());
+//        ArrayList<Calendar> dates   = new ArrayList<>(COMMIT_IDS_WITH_DATES.values());
+//
+//        for (int i = 0; i < COMMIT_IDS_WITH_DATES.size(); i++)
+//        {
+//            String minCommitId = commitIds.get(i);
+//            Calendar minCommitDate = dates.get(i);
+//
+//            for (int j = i + 1; j < COMMIT_IDS_WITH_DATES.size(); j++)
+//            {
+//                if (dates.get(j).before(minCommitDate))
+//                {
+//                    minCommitDate = dates.get(j);
+//                    minCommitId = commitIds.get(j);
+//                }
+//            }
+//
+//            sortedCommitIdsWithDates.putIfAbsent(minCommitId, minCommitDate);
+//        }
+
+
+
+    }
+
 
     static void getAllCommitIdsAndCreateFileWithSortedIds() throws IOException, InterruptedException, ParseException
     {
@@ -34,20 +70,20 @@ final class Git
         COMMIT_IDS_WITH_DATES = FileHandler.getAllCommitIdsFromConsoleLines(linesFromConsole);
 
 
-        ArrayList<String> commitIds = new ArrayList<>(COMMIT_IDS_WITH_DATES.keySet());
 
-        removeFileIfPresent(COMMIT_IDS_FILE_PATH);
-        for (String commit : commitIds)
-        {
-            writeLineToFile(commit, COMMIT_IDS_FILE_PATH);
-            COMMIT_IDS.add(commit);
-        }
+
+      //  System.out.println(COMMIT_IDS_WITH_DATES.size());
+      //  System.out.println(COMMIT_IDS.size());
+
+
+
     }
 
     private static ArrayList<String> retrieveCommits() throws IOException, InterruptedException
     {
-        //        return executeCommandsAndReadLinesFromConsole(new File(REPO_FOLDER_NAME), "git", "log", "--first-parent", "--reverse", "--pretty=format:%H=%ad=");
         return executeCommandsAndReadLinesFromConsole(new File(REPO_FOLDER_NAME), "git", "log", "--reverse", "--pretty=format:%H=%ad=");
+
+        //return executeCommandsAndReadLinesFromConsole(new File(REPO_FOLDER_NAME), "git", "log", "--first-parent", "--reverse", "--pretty=format:%H=%ad=");
     }
 
 

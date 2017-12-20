@@ -57,12 +57,7 @@ class Util
         PATH_TO_SMELLY_FINAL_RESULT_FILE = ((result.toString()).concat("/").concat(repoName).concat("-smelly").concat(predictIn).concat(".csv"));
         PATH_TO_CLEAN_FINAL_RESULT_FILE = ((result.toString()).concat("/").concat(repoName).concat("-clean").concat(predictIn).concat(".csv"));
 
-        removeFileIfPresent(PATH_TO_SMELLY_FINAL_RESULT_FILE);
-        removeFileIfPresent(PATH_TO_CLEAN_FINAL_RESULT_FILE);
-
         createEmptyFinalResultFiles();
-        //createEmptyFinalResultCleanFile();
-
     }
 
 
@@ -107,13 +102,68 @@ class Util
         }
     }
 
+    private static void createEmptyFinalResultSmellyFile() throws FileNotFoundException
+    {
+        StringBuilder headerLine = new StringBuilder();
+        int currentInterval = STEP;
+
+        headerLine.append("filename, CommitCountWhenBecomesSmelly, CommitIdWhenBecomesSmelly ");
+
+        while (currentInterval <= MAX_INT_DAYS_OR_COMMITS)
+        {
+            headerLine.append(",metricsCommitId").append(currentInterval).append(",");
+            headerLine.append("metricsCommitCount").append(currentInterval).append(",");
+            headerLine.append("predictionCommitId").append(currentInterval).append(",");
+            headerLine.append("predictionCommitCount").append(currentInterval).append(",");
+
+            headerLine.append("LOC").append(currentInterval).append(",");
+            headerLine.append("LCOM").append(currentInterval).append(",");
+            headerLine.append("WMC").append(currentInterval).append(",");
+            headerLine.append("RFC").append(currentInterval).append(",");
+            headerLine.append("CBO").append(currentInterval).append(",");
+            headerLine.append("NOM").append(currentInterval).append(",");
+            headerLine.append("NOA").append(currentInterval).append(",");
+            headerLine.append("DIT").append(currentInterval).append(",");
+            headerLine.append("NOC").append(currentInterval).append(",");
+
+            headerLine.append("LOCrecent").append(currentInterval).append(",");
+            headerLine.append("LCOMrecent").append(currentInterval).append(",");
+            headerLine.append("WMCrecent").append(currentInterval).append(",");
+            headerLine.append("RFCrecent").append(currentInterval).append(",");
+            headerLine.append("CBOrecent").append(currentInterval).append(",");
+            headerLine.append("NOMrecent").append(currentInterval).append(",");
+            headerLine.append("NOArecent").append(currentInterval).append(",");
+            headerLine.append("DITrecent").append(currentInterval).append(",");
+            headerLine.append("NOCrecent").append(currentInterval).append(",");
+
+            headerLine.append("LOChist").append(currentInterval).append(",");
+            headerLine.append("LCOMhist").append(currentInterval).append(",");
+            headerLine.append("WMChist").append(currentInterval).append(",");
+            headerLine.append("RFChist").append(currentInterval).append(",");
+            headerLine.append("CBOhist").append(currentInterval).append(",");
+            headerLine.append("NOMhist").append(currentInterval).append(",");
+            headerLine.append("NOAhist").append(currentInterval).append(",");
+            headerLine.append("DIThist").append(currentInterval).append(",");
+            headerLine.append("NOChist").append(currentInterval);
+
+            currentInterval = currentInterval + STEP;
+
+        }
+
+        String smells = ",isBlob, isCDSBP, isComplexClass, isFuncDec, isSpaghCode";
+        try (PrintStream ps = new PrintStream(PATH_TO_SMELLY_FINAL_RESULT_FILE))
+        {
+            ps.println(headerLine.append(smells));
+        }
+    }
+
 
     private static void createEmptyFinalResultCleanFile() throws IOException
     {
         @SuppressWarnings("StringBufferReplaceableByString")
         StringBuilder headerLine = new StringBuilder();
 
-        headerLine.append("filename, commitId, step,");
+        headerLine.append("filename, metricsCommitId,  metricsCommitCount,  predictionCommitId,  predictionCommitCount,");
 
             headerLine.append("LOC").append(",");
             headerLine.append("LCOM").append(",");
@@ -156,60 +206,12 @@ class Util
 
     private static void createEmptyFinalResultFiles() throws IOException
     {
-        StringBuilder headerLine = new StringBuilder();
-        int currentInterval = STEP;
+        removeFileIfPresent(PATH_TO_SMELLY_FINAL_RESULT_FILE);
+        removeFileIfPresent(PATH_TO_CLEAN_FINAL_RESULT_FILE);
 
-        headerLine.append("filename, IsSmellyInCommitId");
-
-        while (currentInterval <= MAX_INT_DAYS_OR_COMMITS)
-        {
-            headerLine.append(",metricsCommitId").append(currentInterval).append(",");
-
-            headerLine.append("predictAfterRandomNBetween1And").append(currentInterval).append(",");
-            headerLine.append("predictionCommitIdAfter").append(currentInterval).append(",");
-
-            headerLine.append("LOC").append(currentInterval).append(",");
-            headerLine.append("LCOM").append(currentInterval).append(",");
-            headerLine.append("WMC").append(currentInterval).append(",");
-            headerLine.append("RFC").append(currentInterval).append(",");
-            headerLine.append("CBO").append(currentInterval).append(",");
-            headerLine.append("NOM").append(currentInterval).append(",");
-            headerLine.append("NOA").append(currentInterval).append(",");
-            headerLine.append("DIT").append(currentInterval).append(",");
-            headerLine.append("NOC").append(currentInterval).append(",");
-
-            headerLine.append("LOCrecent").append(currentInterval).append(",");
-            headerLine.append("LCOMrecent").append(currentInterval).append(",");
-            headerLine.append("WMCrecent").append(currentInterval).append(",");
-            headerLine.append("RFCrecent").append(currentInterval).append(",");
-            headerLine.append("CBOrecent").append(currentInterval).append(",");
-            headerLine.append("NOMrecent").append(currentInterval).append(",");
-            headerLine.append("NOArecent").append(currentInterval).append(",");
-            headerLine.append("DITrecent").append(currentInterval).append(",");
-            headerLine.append("NOCrecent").append(currentInterval).append(",");
-
-            headerLine.append("LOChist").append(currentInterval).append(",");
-            headerLine.append("LCOMhist").append(currentInterval).append(",");
-            headerLine.append("WMChist").append(currentInterval).append(",");
-            headerLine.append("RFChist").append(currentInterval).append(",");
-            headerLine.append("CBOhist").append(currentInterval).append(",");
-            headerLine.append("NOMhist").append(currentInterval).append(",");
-            headerLine.append("NOAhist").append(currentInterval).append(",");
-            headerLine.append("DIThist").append(currentInterval).append(",");
-            headerLine.append("NOChist").append(currentInterval);
-
-            currentInterval = currentInterval + STEP;
-
-        }
-
-        String smells = ",isBlob, isCDSBP, isComplexClass, isFuncDec, isSpaghCode";
-        try (PrintStream ps = new PrintStream(PATH_TO_SMELLY_FINAL_RESULT_FILE))
-        {
-            ps.println(headerLine.append(smells));
-        }
+        createEmptyFinalResultSmellyFile();
 
         createEmptyFinalResultCleanFile();
-
     }
 
 
