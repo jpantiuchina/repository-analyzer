@@ -23,13 +23,14 @@ public class WholePipeline
     static String REPOSITORY_HISTORY_FILE_PATH;
     static String COMMIT_IDS_FILE_PATH;
 
-    static ArrayList<String> COMMIT_INDEX_TO_COMMIT_ID = new ArrayList<>();
+    private static ArrayList<String> COMMIT_INDEX_TO_COMMIT_ID = new ArrayList<>();
     static Map<String, Integer> COMMIT_ID_TO_COMMIT_INDEX = new HashMap<>();
 
     static LinkedHashMap<String, Calendar> COMMIT_IDS_WITH_DATES = new LinkedHashMap<>();
 
     static String PATH_TO_SMELLY_FINAL_RESULT_FILE;
     static String PATH_TO_CLEAN_FINAL_RESULT_FILE;
+    static String PATH_TO_OTHER_SMELLY_FINAL_RESULT_FILE;
 
     static ArrayList<String> uniquePairs = new ArrayList<>();
 

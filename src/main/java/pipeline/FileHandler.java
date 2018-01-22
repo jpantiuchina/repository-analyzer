@@ -143,6 +143,7 @@ class FileHandler
                 int currentStep = 1;
                 while (currentStep <= totalNumberOfSteps)
                 {
+                    String fileName = cols[0];
                     //int metricsCommitIdColumnForStep = 3 + 31(x-1)
                     int metricsCommitIdColumnForStep = 31 * currentStep - 28;
                     String metricsCommitId = cols[metricsCommitIdColumnForStep];
@@ -159,50 +160,64 @@ class FileHandler
 
                         ArrayList<String> allFileNamesInPredictionCommit = getAllFileNamesPresentInCommitId(predictionCommitId); //git show will return all smelly and clean files
 
+                        //exclude the file itself
+                        allFileNamesInMetricsCommit.remove(fileName);
+                        allFileNamesInPredictionCommit.remove(fileName);
+
                         if (!allFileNamesInMetricsCommit.isEmpty())
                         {
                             for (String fileNameInMetricsCommit : allFileNamesInMetricsCommit)
-                            {
+                            {   //found other file present in metrics and prediction commits
                                 if (allFileNamesInPredictionCommit.contains(fileNameInMetricsCommit))
                                 {
                                     HashMap<FileData, String> fileDataAndCommitIdOfPreviousEditInMetrics = getCommitIdOfPreviousEditAndReturnFileData(fileNameInMetricsCommit, metricsCommitId);
                                     HashMap<FileData, String> fileDataAndCommitIdOfPreviousEditInPrediction = getCommitIdOfPreviousEditAndReturnFileData(fileNameInMetricsCommit, predictionCommitId);
 
+                                    // this file has data for metrics commitId and prediction Commit Id
                                     if (fileDataAndCommitIdOfPreviousEditInMetrics != null && fileDataAndCommitIdOfPreviousEditInPrediction != null)
                                     {
                                         FileData fd = fileDataAndCommitIdOfPreviousEditInMetrics.keySet().iterator().next();
                                         String previousEditOfMetricsCommitId = fileDataAndCommitIdOfPreviousEditInMetrics.get(fd);
 
-                                        FileData pfd = fileDataAndCommitIdOfPreviousEditInMetrics.keySet().iterator().next();
-                                        String previousEditOfPredictionCommitId = fileDataAndCommitIdOfPreviousEditInMetrics.get(pfd);
+                                        FileData pfd = fileDataAndCommitIdOfPreviousEditInPrediction.keySet().iterator().next();
+                                        String previousEditOfPredictionCommitId = fileDataAndCommitIdOfPreviousEditInPrediction.get(pfd);
 
-                                        ArrayList<FileCommitData> metricsFileCommits = fd.fileCommitDataArrayList;
-                                        FileCommitData predictionCommitData = findCommitDataInArrayList(metricsFileCommits,previousEditOfPredictionCommitId);
-                                        int predictionCount = predictionCommitData.commitCount;
-
-                                        for (int i = 0; i < metricsFileCommits.size(); i++)
+                                        if (!previousEditOfMetricsCommitId.equals(previousEditOfPredictionCommitId)) //different commits
                                         {
-                                            FileCommitData metricsFileCommit = metricsFileCommits.get(i);
-                                            if (metricsFileCommit.commitId.equals(previousEditOfMetricsCommitId) && metricsFileCommit.commitCount > 2)
+                                            ArrayList<FileCommitData> metricsFileCommits = fd.fileCommitDataArrayList;
+                                            FileCommitData predictionCommitData = findCommitDataInArrayList(metricsFileCommits,previousEditOfPredictionCommitId);
+                                            assert predictionCommitData != null;
+                                            int predictionCount = predictionCommitData.commitCount;
+
+                                            for (int i = 0; i < metricsFileCommits.size(); i++)
                                             {
-                                                boolean clean = true;
-                                                //check if this file is clean until previousEditOfPredictionCommitId
-                                                while (i < predictionCount - 1)
+                                                FileCommitData metricsFileCommit = metricsFileCommits.get(i);
+                                                if (metricsFileCommit.commitId.equals(previousEditOfMetricsCommitId) && metricsFileCommit.commitCount > 2)
                                                 {
-                                                    i++;
-                                                    FileCommitData inBetweenCommit = metricsFileCommits.get(i);
-                                                    if(inBetweenCommit.isFileSmelly)
+                                                    boolean clean = true;
+                                                    //check if this file is clean until previousEditOfPredictionCommitId
+                                                    while (i < predictionCount - 1)
                                                     {
-                                                        clean = false;
+                                                        i++;
+                                                        FileCommitData inBetweenCommit = metricsFileCommits.get(i);
+                                                        if(inBetweenCommit.isFileSmelly)
+                                                        {
+                                                            clean = false;
+                                                            // add to 3rd file
+                                                           composeLineAndWriteToFileOtherSmellyClasses(fd, metricsFileCommit, previousEditOfMetricsCommitId, metricsCommitId, metricsCommitCount, predictionCommitId, predictionCommitCount, inBetweenCommit.commitId, COMMIT_ID_TO_COMMIT_INDEX.get(inBetweenCommit.commitId), PATH_TO_OTHER_SMELLY_FINAL_RESULT_FILE);
+                                                            break;
+                                                        }
                                                     }
+                                                    if (clean)
+                                                    {
+                                                        composeLineAndWriteToCleanFile(fd, metricsFileCommit, previousEditOfMetricsCommitId, metricsCommitId, metricsCommitCount, predictionCommitId, predictionCommitCount, PATH_TO_CLEAN_FINAL_RESULT_FILE);
+                                                    }
+                                                    break;
                                                 }
-                                                if (clean)
-                                                {
-                                                    composeLineAndWriteToCleanFile(fd, metricsFileCommit, previousEditOfMetricsCommitId, metricsCommitId, metricsCommitCount, predictionCommitId, predictionCommitCount, PATH_TO_CLEAN_FINAL_RESULT_FILE);
-                                                }
-                                                break;
                                             }
                                         }
+
+
                                     }
                                 }
                             }
@@ -422,17 +437,52 @@ class FileHandler
     }
 
 
+    private static void composeLineAndWriteToFileOtherSmellyClasses(FileData fd, FileCommitData lastEditFileCommitData, String lastEditCommitId, String metricsCommitId, String metricsCommitCount, String predictionCommitId, String predictionCommitCount, String becomeSmellyInCommitId, int becomeSmellyInCommitCount, String outputFilePath) throws IOException, ParseException, InterruptedException
+    {
+        String uniqueString = makeUniqueString(fd.fileNamePath, metricsCommitId, predictionCommitId);
+
+        if (!uniquePairs.contains(uniqueString))  //add all
+        {
+            String lineNumericalData = createFinalLineWithSlopesDataForCleanOrSmellyOptionalFile(fd, lastEditFileCommitData, metricsCommitId, predictionCommitId);
+
+            if (!lineNumericalData.isEmpty() )
+            {
+                lineNumericalData = lineNumericalData.replaceAll(",$", "");
+
+                StringBuilder finalLine = new StringBuilder((fd.fileNamePath) + (",") +
+                        metricsCommitId + "," + metricsCommitCount + "," +
+                        predictionCommitId + "," + predictionCommitCount + "," +
+                        becomeSmellyInCommitId + "," + becomeSmellyInCommitCount + ",");
+
+                    ArrayList<String> currentSmells = getSmellsForFileInCommit(fd); //
+                    for (String smell : currentSmells) //5 smells
+                    {
+                        finalLine.append(smell).append(",");
+                    }
+
+                finalLine.append(lineNumericalData);
+
+                writeLineToFile(finalLine.toString(), outputFilePath);
+            }
+            uniquePairs.add(uniqueString);
+        }
+    }
+
+
+
+
     private static void composeLineAndWriteToCleanFile(FileData fd, FileCommitData lastEditFileCommitData, String lastEditCommitId, String metricsCommitId, String metricsCommitCount, String predictionCommitId, String predictionCommitCount, String outputFilePath) throws IOException, ParseException, InterruptedException
     {
         String uniqueString = makeUniqueString(fd.fileNamePath, metricsCommitId, predictionCommitId);
 
         if (!uniquePairs.contains(uniqueString))  //add all for smelly
         {
-            String lineNumericalData = createFinalLineWithSlopesDataForCleanFile(fd, lastEditFileCommitData, metricsCommitId, predictionCommitId);
-            lineNumericalData = lineNumericalData.replaceAll(",$", "");
+            String lineNumericalData = createFinalLineWithSlopesDataForCleanOrSmellyOptionalFile(fd, lastEditFileCommitData, metricsCommitId, predictionCommitId);
 
             if (!lineNumericalData.isEmpty())
             {
+                lineNumericalData = lineNumericalData.replaceAll(",$", "");
+
                 String finalLine = String.valueOf(new StringBuilder(fd.fileNamePath).append(",").
                         append(metricsCommitId).append(",").
                         append(metricsCommitCount).append(",").
@@ -445,7 +495,6 @@ class FileHandler
             }
             uniquePairs.add(uniqueString);
         }
-
     }
 
 
@@ -610,7 +659,7 @@ class FileHandler
         return null;
     }
 
-    private static String createFinalLineWithSlopesDataForCleanFile(FileData fd, FileCommitData lastEditFileCommitData, String metricsCommitId, String predictionCommitId) throws IOException
+    private static String createFinalLineWithSlopesDataForCleanOrSmellyOptionalFile(FileData fd, FileCommitData lastEditFileCommitData, String metricsCommitId, String predictionCommitId) throws IOException
     {
 
         //FileCommitData lastEditFileCommitData = getFileCommitDataFromCommitId(fd, lastEditCommitId);
@@ -624,13 +673,19 @@ class FileHandler
         ArrayList<Double> slopesHistory = getFileSlopesForMetricsBetween2Commits(fd, firstFileCommitData, lastEditFileCommitData);
 
         ArrayList<Double> slopesRecent;
-        if (!firstFileCommitData.equals(recentFileCommitData))
+
+        boolean isSlopeChange = isAtLeastOneSlopeChange(slopesHistory);
+
+        if (isSlopeChange)
         {
-            slopesRecent = getFileSlopesForMetricsBetween2Commits(fd, recentFileCommitData, lastEditFileCommitData);
-        } else
-        {
-            slopesRecent = slopesHistory;
-        }
+
+            if (!firstFileCommitData.equals(recentFileCommitData))
+            {
+                slopesRecent = getFileSlopesForMetricsBetween2Commits(fd, recentFileCommitData, lastEditFileCommitData);
+            } else
+            {
+                slopesRecent = slopesHistory;
+            }
 
 
         StringBuilder allMetricsAndSlopesForAllIntervals = new StringBuilder();
@@ -656,6 +711,8 @@ class FileHandler
         }
 
         return allMetricsAndSlopesForAllIntervals.toString();
+    }
+        return "";
     }
 
 
@@ -697,24 +754,6 @@ class FileHandler
 
                 systemMetricsCommitId = getCommitIdFromAllHistoryBeforeNDays(commitIdWhereBecomesSmelly, -randomNum);
                 predictionCommitIdForInterval = getCommitIdFromAllHistoryBeforeNDays(commitIdWhereBecomesSmelly, currentCount-randomNum);
-                //ArrayList<String> filesInPredictionCommit = getAllFileNamesPresentInCommitId(predictionCommitIdForInterval);
-
-//                boolean found = false;
-//                while (!filesInPredictionCommit.contains(fd.fileNamePath) && randomNum < currentCount && !found) //file is not present in prediction commit
-//                {
-//                        randomNum++;
-//                        predictionCommitIdForInterval = getCommitIdFromAllHistoryBeforeNDays(commitIdWhereBecomesSmelly, currentCount-randomNum);
-//                        filesInPredictionCommit = getAllFileNamesPresentInCommitId(predictionCommitIdForInterval);
-//                        if (filesInPredictionCommit.contains(fd.fileNamePath))
-//                        {
-//                            found = true;
-//                        }
-//                }
-//
-//                if (!found && !filesInPredictionCommit.contains(fd.fileNamePath))
-//                {
-//                    predictionCommitIdForInterval = commitIdWhereBecomesSmelly;
-//                }
 
             }
 
