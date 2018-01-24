@@ -38,8 +38,9 @@ public class WholePipeline
     static boolean IS_PREDICTION_IN_DAYS = true;
     static int STEP = 15;
 
+    static boolean CREATED = false;
 
-    static ArrayList<FileData> allFilesData = new ArrayList<>();
+    static ArrayList<JavaFile> allFilesData = new ArrayList<>();
 
 
     public static void main(String[] args) throws IOException, InterruptedException, ParseException
@@ -53,6 +54,7 @@ public class WholePipeline
             System.out.println("Usage argument: <repositoryFolderPath> <isPredictInDays> <maxIntervalLength> <Step>");
             System.exit(1);
         }
+
 
         String pathToRepositoryFolderWithAllData = args[0].trim();
 
