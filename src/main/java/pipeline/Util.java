@@ -90,13 +90,18 @@ class Util
     {
         File smellyFile = new File(PATH_TO_SMELLY_FINAL_RESULT_FILE);
         File cleanFile = new File(PATH_TO_CLEAN_FINAL_RESULT_FILE);
+        File otherFile = new File(PATH_TO_OTHER_SMELLY_FINAL_RESULT_FILE);
+
+
 
         if(isFileEmpty(smellyFile) || isFileEmpty(cleanFile) )
         {
             boolean removedSmelly = smellyFile.delete();
             boolean removedClean = cleanFile.delete();
+            boolean removedOther = otherFile.delete();
 
-            if (removedSmelly && removedClean)
+
+            if (removedSmelly && removedClean && removedOther)
             {
                 System.out.println("No 'Smelly' Or 'Clean' Files found with needed minimum survival for repository: " + REPO_FOLDER_NAME );
                 System.out.println();
