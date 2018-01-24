@@ -40,7 +40,7 @@ public class WholePipeline
 
     static boolean CREATED = false;
 
-    static ArrayList<JavaFile> allFilesData = new ArrayList<>();
+    static ArrayList<FileData> allFilesData = new ArrayList<>();
 
 
     public static void main(String[] args) throws IOException, InterruptedException, ParseException
